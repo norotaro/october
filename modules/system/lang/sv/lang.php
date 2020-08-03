@@ -11,6 +11,11 @@ return [
     'file' => [
         'create_fail' => "Kunde inte skapa fil: :name",
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => 'Ogiltig säkerhetstoken',
+        ],
+    ],
     'combiner' => [
         'not_found' => "Kombinationsfilen ':name' kunde ej hittas",
     ],
@@ -218,7 +223,7 @@ return [
         'none' => [
             'label' => 'Inga uppdateringar',
             'help' => 'Inga nya uppdateringar hittades.'
-    ],
+        ],
         'important_action' => [
             'empty' => 'Välj åtgärd',
             'confirm' => 'Bekräfta uppdatering',
@@ -296,5 +301,9 @@ return [
         'manage_editor' => 'Hantera inställningar för kodredigerare',
         'view_the_dashboard' => 'Visa kontrollpanelen',
         'manage_branding' => 'Anpassa back-end',
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Felaktig filsökväg angiven: ':path'.",
+        'folder_size_items' => 'föremål',
+    ],
 ];

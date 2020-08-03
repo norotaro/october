@@ -13,6 +13,11 @@ return [
     'combiner' => [
         'not_found' => "Комбинираният файл ':name' не е намерен."
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => 'Невалиден код за сигурност (token)',
+        ],
+    ],
     'system' => [
         'name' => 'Система',
         'menu_label' => 'Система',
@@ -302,5 +307,9 @@ return [
         'manage_editor' => 'Управление на предпочитанията на редактор на код',
         'view_the_dashboard' => 'Преглед на таблото',
         'manage_branding' => 'Персонализиране на админ панела'
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Невалиден път за файл е посочено: ':path'.",
+        'folder_size_items' => 'предмет(и)',
+    ],
 ];

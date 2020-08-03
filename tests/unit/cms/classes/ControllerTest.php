@@ -12,6 +12,13 @@ class ControllerTest extends TestCase
 
         Model::clearBootedModels();
         Model::flushEventListeners();
+
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/components/Archive.php';
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/components/Post.php';
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/components/MainMenu.php';
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/components/ContentBlock.php';
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/components/Comments.php';
+        include_once base_path() . '/tests/fixtures/plugins/october/tester/classes/Users.php';
     }
 
     public function testThemeUrl()
@@ -20,10 +27,10 @@ class ControllerTest extends TestCase
         $controller = new Controller($theme);
 
         $url = $controller->themeUrl();
-        $this->assertEquals('http://localhost/themes/test', $url);
+        $this->assertEquals(url('/themes/test'), $url);
 
         $url = $controller->themeUrl('foo/bar.css');
-        $this->assertEquals('http://localhost/themes/test/foo/bar.css', $url);
+        $this->assertEquals(url('/themes/test/foo/bar.css'), $url);
 
         //
         // These tests seem to bear different results
@@ -140,7 +147,7 @@ class ControllerTest extends TestCase
     }
 
     /**
-     * @expectedException        Twig_Error_Runtime
+     * @expectedException        \Twig\Error\RuntimeError
      * @expectedExceptionMessage is not found
      */
     public function testPartialNotFound()
@@ -163,13 +170,13 @@ class ControllerTest extends TestCase
         $requestMock = $this
             ->getMockBuilder('Illuminate\Http\Request')
             ->disableOriginalConstructor()
-            ->setMethods(array('ajax', 'method', 'header'))
+            ->setMethods(['ajax', 'method', 'header'])
             ->getMock();
 
-        $map = array(
-            array('X_OCTOBER_REQUEST_HANDLER', null, $handler),
-            array('X_OCTOBER_REQUEST_PARTIALS', null, $partials),
-        );
+        $map = [
+            ['X_OCTOBER_REQUEST_HANDLER', null, $handler],
+            ['X_OCTOBER_REQUEST_PARTIALS', null, $partials],
+        ];
 
         $requestMock->expects($this->any())
             ->method('ajax')
@@ -296,7 +303,7 @@ class ControllerTest extends TestCase
         $theme = Theme::load('test');
         $controller = new Controller($theme);
         $response = $controller->run('/with-component')->getContent();
-        $page = PHPUnit_Framework_Assert::readAttribute($controller, 'page');
+        $page = $this->readAttribute($controller, 'page');
         $this->assertArrayHasKey('testArchive', $page->components);
 
         $component = $page->components['testArchive'];
@@ -324,7 +331,7 @@ ESC;
         $theme = Theme::load('test');
         $controller = new Controller($theme);
         $response = $controller->run('/with-components')->getContent();
-        $page = PHPUnit_Framework_Assert::readAttribute($controller, 'page');
+        $page = $this->readAttribute($controller, 'page');
 
         $this->assertArrayHasKey('firstAlias', $page->components);
         $this->assertArrayHasKey('secondAlias', $page->components);
@@ -374,6 +381,67 @@ ESC;
         $response = $controller->run('/no-component-class')->getContent();
     }
 
+    public function testSoftComponentClassNotFound()
+    {
+        $theme = Theme::load('test');
+        $controller = new Controller($theme);
+        $response = $controller->run('/no-soft-component-class')->getContent();
+
+        $this->assertEquals('<p>Hey</p>', $response);
+    }
+
+    public function testSoftComponentClassFound()
+    {
+        $theme = Theme::load('test');
+        $controller = new Controller($theme);
+        $response = $controller->run('/with-soft-component-class')->getContent();
+        $page = $this->readAttribute($controller, 'page');
+        $this->assertArrayHasKey('testArchive', $page->components);
+
+        $component = $page->components['testArchive'];
+        $details = $component->componentDetails();
+
+        $content = <<<ESC
+<div>LAYOUT CONTENT<p>This page uses components.</p>
+    <h3>Lorum ipsum</h3>
+    <p>Post Content #1</p>
+    <h3>La Playa Nudista</h3>
+    <p>Second Post Content</p>
+</div>
+ESC;
+
+        $this->assertEquals($content, $response);
+        $this->assertEquals(69, $component->property('posts-per-page'));
+        $this->assertEquals('Blog Archive Dummy Component', $details['name']);
+        $this->assertEquals('Displays an archive of blog posts.', $details['description']);
+    }
+
+    public function testSoftComponentWithAliasClassFound()
+    {
+        $theme = Theme::load('test');
+        $controller = new Controller($theme);
+        $response = $controller->run('/with-soft-component-class-alias')->getContent();
+        $page = $this->readAttribute($controller, 'page');
+        $this->assertArrayHasKey('someAlias', $page->components);
+
+        $component = $page->components['someAlias'];
+        $details = $component->componentDetails();
+
+        $content = <<<ESC
+<div>LAYOUT CONTENT<p>This page uses components.</p>
+    <h3>Lorum ipsum</h3>
+    <p>Post Content #1</p>
+    <h3>La Playa Nudista</h3>
+    <p>Second Post Content</p>
+</div>
+ESC;
+
+        $this->assertEquals($content, $response);
+        $this->assertEquals(69, $component->property('posts-per-page'));
+        $this->assertEquals('Blog Archive Dummy Component', $details['name']);
+        $this->assertEquals('Displays an archive of blog posts.', $details['description']);
+    }
+
     public function testComponentNotFound()
     {
         //
@@ -395,12 +463,33 @@ ESC;
         $this->assertEquals('<p>DEFAULT MARKUP: I am a post yay</p>', $response);
     }
 
+    public function testComponentPartialAliasOverride()
+    {
+        $theme = Theme::load('test');
+        $controller = new Controller($theme);
+        $response = $controller->run('/component-partial-alias-override')->getContent();
+
+        //
+        // Testing case sensitivity
+        //
+        // Component alias: overRide1
+        // Target path: partials\override1\default.htm
+        //
+        $this->assertEquals('<p>I am an override alias partial! Yay</p>', $response);
+    }
+
     public function testComponentPartialOverride()
     {
         $theme = Theme::load('test');
         $controller = new Controller($theme);
         $response = $controller->run('/component-partial-override')->getContent();
 
+        //
+        // Testing case sensitivity
+        //
+        // Component code: testPost
+        // Target path: partials\testpost\default.htm
+        //
         $this->assertEquals('<p>I am an override partial! Yay</p>', $response);
     }
 
@@ -457,5 +546,4 @@ Custom output: And tell him about his brush strokes?
 ESC;
         $this->assertEquals($content, $response);
     }
-
 }

@@ -46,6 +46,7 @@
         this.$timePicker = $('[data-timepicker]', this.$el)
         this.hasDate = !!this.$datePicker.length
         this.hasTime = !!this.$timePicker.length
+        this.ignoreTimezone = this.$el.get(0).hasAttribute('data-ignore-timezone')
 
         this.initRegion()
 
@@ -102,6 +103,8 @@
 
         var pikadayOptions = {
             yearRange: this.options.yearRange,
+            firstDay: this.options.firstDay,
+            showWeekNumber: this.options.showWeekNumber,
             format: dateFormat,
             setDefaultDate: now,
             onOpen: function() {
@@ -138,7 +141,7 @@
     DatePicker.prototype.onSelectDatePicker = function(pickerMoment) {
         var pickerValue = pickerMoment.format(this.dbDateFormat)
 
-        var timeValue = this.getTimePickerValue()
+        var timeValue = this.options.mode === 'date' ? '00:00:00' : this.getTimePickerValue()
 
         var momentObj = moment
             .tz(pickerValue + ' ' + timeValue, this.dbDateTimeFormat, this.timezone)
@@ -185,10 +188,10 @@
     DatePicker.prototype.initTimePicker = function() {
         this.$timePicker.clockpicker({
             autoclose: 'true',
-            placement: 'bottom',
+            placement: 'auto',
             align: 'right',
-            twelvehour: this.isTimeTwelveHour()
-            // afterDone: this.proxy(this.onSelectTimePicker)
+            twelvehour: this.isTimeTwelveHour(),
+            afterDone: this.proxy(this.onChangeTimePicker)
         })
 
         this.$timePicker.val(this.getDataLockerValue(this.getTimeFormat()))
@@ -208,6 +211,11 @@
         var lockerValue = momentObj.format(this.dbDateTimeFormat)
 
         this.$dataLocker.val(lockerValue)
+    }
+
+    DatePicker.prototype.onChangeTimePicker = function() {
+        // Trigger a change event when the time is changed, to allow dependent fields to refresh
+        this.$timePicker.trigger('change')
     }
 
     // Returns in user preference timezone
@@ -291,6 +299,12 @@
         if (!this.timezone) {
             this.timezone = 'UTC'
         }
+
+        // Set both timezones to UTC to disable converting between them
+        if (this.ignoreTimezone) {
+            this.appTimezone = 'UTC'
+            this.timezone = 'UTC'
+        }
     }
 
     DatePicker.prototype.getLang = function(name, defaultValue) {
@@ -305,7 +319,10 @@
         minDate: null,
         maxDate: null,
         format: null,
-        yearRange: 10
+        yearRange: 10,
+        firstDay: 0,
+        showWeekNumber: false,
+        mode: 'datetime'
     }
 
     // PLUGIN DEFINITION

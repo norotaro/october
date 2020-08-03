@@ -102,7 +102,6 @@
         }).always(function() {
             $.oc.stripeLoadIndicator.hide()
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            alert(jqXHR.responseText.length ? jqXHR.responseText : jqXHR.statusText)
             $.oc.stripeLoadIndicator.hide()
         })
 
@@ -173,7 +172,7 @@
         var dataId = $target.closest('li').attr('data-tab-id'),
             title = $target.attr('title'),
             $sidePanel = $('#cms-side-panel')
-        
+
         if (title)
             this.setPageTitle(title)
 
@@ -209,10 +208,7 @@
 
         var $primaryCollapseIcon = $('<a href="javascript:;" class="tab-collapse-icon primary"><i class="icon-chevron-down"></i></a>'),
             $primaryPanel = $('.control-tabs.primary-tabs', data.pane),
-            $secondaryPanel = $('.control-tabs.secondary-tabs', data.pane),
-            $primaryTabContainer = $('.nav-tabs', $primaryPanel)
-
-        $primaryTabContainer.addClass('master-area')
+            $secondaryPanel = $('.control-tabs.secondary-tabs', data.pane)
 
         if ($primaryPanel.length > 0) {
             $secondaryPanel.append($primaryCollapseIcon);
@@ -253,6 +249,8 @@
 
         $form.on('changed.oc.changeMonitor', function() {
             $panel.trigger('modified.oc.tab')
+            $panel.find('[data-control=commit-button]').addClass('hide');
+            $panel.find('[data-control=reset-button]').addClass('hide');
             self.updateModifiedCounter()
         })
 
@@ -281,6 +279,10 @@
 
     CmsPage.prototype.onAjaxSuccess = function(ev, context, data) {
         var element = ev.target
+
+        // Update the visibilities of the commit & reset buttons
+        $('[data-control=commit-button]', element).toggleClass('hide', !data.canCommit)
+        $('[data-control=reset-button]', element).toggleClass('hide', !data.canReset)
 
         if (data.templatePath !== undefined) {
             $('input[name=templatePath]', element).val(data.templatePath)
@@ -316,9 +318,14 @@
         if (context.handler == 'onSave' && (!data['X_OCTOBER_ERROR_FIELDS'] && !data['X_OCTOBER_ERROR_MESSAGE'])) {
             $(element).trigger('unchange.oc.changeMonitor')
         }
+
+        // Reload the form if the server has requested it
+        if (data.forceReload) {
+            this.reloadForm(element)
+        }
     }
 
-    CmsPage.prototype.onAjaxError = function(ev, context, data, jqXHR) {
+    CmsPage.prototype.onAjaxError = function(ev, context, message, data, jqXHR) {
         if (context.handler == 'onSave') {
             if (jqXHR.responseText == 'mtime-mismatch') {
                 ev.preventDefault()
@@ -362,7 +369,7 @@
         }).done(function(data) {
             var tabs = $('#cms-master-tabs').data('oc.tab');
             $.each(data.deleted, function(index, path){
-                var 
+                var
                     tabId = templateType + '-' + data.theme + '-' + path,
                     tab = tabs.findByIdentifier(tabId)
 
@@ -378,14 +385,19 @@
     }
 
     CmsPage.prototype.onInspectorShowing = function(ev, data) {
-        $(ev.currentTarget).closest('[data-control="toolbar"]').data('oc.dragScroll').goToElement(ev.currentTarget, data.callback)
+        var $dragScroll = $(ev.currentTarget).closest('[data-control="toolbar"]').data('oc.dragScroll')
+        if ($dragScroll) {
+            $dragScroll.goToElement(ev.currentTarget, data.callback)
+        } else {
+            data.callback();
+        }
 
         ev.stopPropagation()
     }
 
     CmsPage.prototype.onInspectorHidden = function(ev) {
         var element = ev.target,
-            values = $.parseJSON($('[data-inspector-values]', element).val())
+            values = JSON.parse($('[data-inspector-values]', element).val())
 
         $('[name="component_aliases[]"]', element).val(values['oc.alias'])
         $('span.alias', element).text(values['oc.alias'])
@@ -393,7 +405,7 @@
 
     CmsPage.prototype.onInspectorHiding = function(ev, values) {
         var element = ev.target,
-            values = $.parseJSON($('[data-inspector-values]', element).val()),
+            values = JSON.parse($('[data-inspector-values]', element).val()),
             alias = values['oc.alias'],
             $componentList = $('#cms-master-tabs > div.tab-content > .tab-pane.active .control-componentlist .layout'),
             $cell = $(ev.target).parent()
@@ -424,7 +436,7 @@
          */
         var editor = $('[data-control=codeeditor]', pane)
         if (editor.length) {
-            var alias = $('input[name="component_aliases[]"]', component).val(),
+            var alias = $('input[name="component_aliases[]"]', component).val().replace(/^@/, ''),
                 codeEditor = editor.codeEditor('getEditorObject')
 
             codeEditor.replace('', {
@@ -643,7 +655,7 @@
     }
 
     CmsPage.prototype.reloadForm = function(form) {
-        var 
+        var
             $form = $(form),
             data = {
                 type: $('[name=templateType]', $form).val(),
@@ -685,7 +697,7 @@
         $(form).request('onGetTemplateList', {
             success: function(data) {
                 $('#cms-master-tabs > .tab-content select[name="settings[layout]"]').each(function(){
-                    var 
+                    var
                         $select = $(this),
                         value = $select.val()
 

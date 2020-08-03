@@ -17,21 +17,37 @@ class EditorSetting extends Model
     use \System\Traits\ViewMaker;
     use \October\Rain\Database\Traits\Validation;
 
-    public $implement = ['System.Behaviors.SettingsModel'];
+    /**
+     * @var array Behaviors implemented by this model.
+     */
+    public $implement = [
+        \System\Behaviors\SettingsModel::class
+    ];
 
+    /**
+     * @var string Unique code
+     */
     public $settingsCode = 'backend_editor_settings';
 
+    /**
+     * @var mixed Settings form field defitions
+     */
     public $settingsFields = 'fields.yaml';
 
-    const CACHE_KEY = 'backend::editor.custom_css';
+    /**
+     * @var string The key to store rendered CSS in the cache under
+     */
+    public $cacheKey = 'backend::editor.custom_css';
 
-    protected $defaultHtmlAllowEmptyTags = 'textarea, a, iframe, object, video, style, script';
+    protected $defaultHtmlAllowEmptyTags = 'textarea, a, iframe, object, video, style, script, .fa, .fr-emoticon, .fr-inner, path, line, hr, i';
 
-    protected $defaultHtmlAllowTags = 'a, abbr, address, area, article, aside, audio, b, base, bdi, bdo, blockquote, br, button, canvas, caption, cite, code, col, colgroup, datalist, dd, del, details, dfn, dialog, div, dl, dt, em, embed, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, hr, i, iframe, img, input, ins, kbd, keygen, label, legend, li, link, main, map, mark, menu, menuitem, meter, nav, noscript, object, ol, optgroup, option, output, p, param, pre, progress, queue, rp, rt, ruby, s, samp, script, style, section, select, small, source, span, strike, strong, sub, summary, sup, table, tbody, td, textarea, tfoot, th, thead, time, title, tr, track, u, ul, var, video, wbr';
+    protected $defaultHtmlAllowTags = 'a, abbr, address, area, article, aside, audio, b, bdi, bdo, blockquote, br, button, canvas, caption, cite, code, col, colgroup, datalist, dd, del, details, dfn, dialog, div, dl, dt, em, embed, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, hr, i, iframe, img, input, ins, kbd, keygen, label, legend, li, link, main, map, mark, menu, menuitem, meter, nav, noscript, object, ol, optgroup, option, output, p, param, pre, progress, queue, rp, rt, ruby, s, samp, script, style, section, select, small, source, span, strike, strong, sub, summary, sup, table, tbody, td, textarea, tfoot, th, thead, time, title, tr, track, u, ul, var, video, wbr';
 
     protected $defaultHtmlNoWrapTags = 'figure, script, style';
 
-    protected $defaultHtmlRemoveTags = 'script, style';
+    protected $defaultHtmlRemoveTags = 'script, style, base';
+
+    protected $defaultHtmlLineBreakerTags = 'figure, table, hr, iframe, form, dl';
 
     protected $defaultHtmlStyleImage = [
         'oc-img-rounded' => 'Rounded',
@@ -51,8 +67,8 @@ class EditorSetting extends Model
     ];
 
     protected $defaultHtmlStyleTable = [
-        'oc-table-dashed-borders' => 'Dashed Borders',
-        'oc-table-alternate-rows' => 'Alternate Rows',
+        'oc-dashed-borders' => 'Dashed Borders',
+        'oc-alternate-rows' => 'Alternate Rows',
     ];
 
     protected $defaultHtmlStyleTableCell = [
@@ -61,16 +77,36 @@ class EditorSetting extends Model
     ];
 
     /**
+     * Editor toolbar presets for Froala.
+     */
+    protected $editorToolbarPresets = [
+        'default' => 'paragraphFormat, paragraphStyle, quote, bold, italic, align, formatOL, formatUL, insertTable,
+                      insertLink, insertImage, insertVideo, insertAudio, insertFile, insertHR, html',
+        'minimal' => 'paragraphFormat, bold, italic, underline, |, insertLink, insertImage, |, html',
+        'full'    => 'undo, redo, |, bold, italic, underline, |, paragraphFormat, paragraphStyle, inlineStyle, |,
+                      strikeThrough, subscript, superscript, clearFormatting, |, fontFamily, fontSize, |, color,
+                      emoticons, -, selectAll, |, align, formatOL, formatUL, outdent, indent, quote, |, insertHR,
+                      insertLink, insertImage, insertVideo, insertAudio, insertFile, insertTable, |, selectAll,
+                      html, fullscreen',
+    ];
+
+    /**
      * Validation rules
      */
     public $rules = [];
 
+    /**
+     * Initialize the seed data for this model. This only executes when the
+     * model is first created or reset to default.
+     * @return void
+     */
     public function initSettingsData()
     {
         $this->html_allow_empty_tags = $this->defaultHtmlAllowEmptyTags;
         $this->html_allow_tags = $this->defaultHtmlAllowTags;
         $this->html_no_wrap_tags = $this->defaultHtmlNoWrapTags;
         $this->html_remove_tags = $this->defaultHtmlRemoveTags;
+        $this->html_line_breaker_tags = $this->defaultHtmlLineBreakerTags;
         $this->html_custom_styles = File::get(base_path().'/modules/backend/models/editorsetting/default_styles.less');
         $this->html_style_image = $this->makeStylesForTable($this->defaultHtmlStyleImage);
         $this->html_style_link = $this->makeStylesForTable($this->defaultHtmlStyleLink);
@@ -81,14 +117,14 @@ class EditorSetting extends Model
 
     public function afterSave()
     {
-        Cache::forget(self::CACHE_KEY);
+        Cache::forget(self::instance()->cacheKey);
     }
 
     protected function makeStylesForTable($arr)
     {
         $count = 0;
 
-        return array_build($arr, function($key, $value) use (&$count) {
+        return array_build($arr, function ($key, $value) use (&$count) {
             return [$count++, ['class_label' => $value, 'class_name' => $key]];
         });
     }
@@ -106,9 +142,14 @@ class EditorSetting extends Model
         $defaultValue = $instance->getDefaultValue($key);
 
         if (is_array($value)) {
-            $value = array_build($value, function($key, $value) {
-                return [array_get($value, 'class_name'), array_get($value, 'class_label')];
-            });
+            $value = array_filter(array_build($value, function ($key, $value) {
+                if (array_has($value, ['class_name', 'class_label'])) {
+                    return [
+                        array_get($value, 'class_name'),
+                        array_get($value, 'class_label')
+                    ];
+                }
+            }));
         }
 
         return $value != $defaultValue ? $value : $default;
@@ -136,15 +177,27 @@ class EditorSetting extends Model
         return $this->$property;
     }
 
+    /**
+     * Return the editor toolbar presets without line breaks.
+     * @return array
+     */
+    public function getEditorToolbarPresets()
+    {
+        return array_map(function ($value) {
+            return preg_replace('/\s+/', ' ', $value);
+        }, $this->editorToolbarPresets);
+    }
+
     public static function renderCss()
     {
-        if (Cache::has(self::CACHE_KEY)) {
-            return Cache::get(self::CACHE_KEY);
+        $cacheKey = self::instance()->cacheKey;
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
         }
 
         try {
             $customCss = self::compileCss();
-            Cache::forever(self::CACHE_KEY, $customCss);
+            Cache::forever($cacheKey, $customCss);
         }
         catch (Exception $ex) {
             $customCss = '/* ' . $ex->getMessage() . ' */';
@@ -163,8 +216,6 @@ class EditorSetting extends Model
 
         $parser->parse($customStyles);
 
-        $css = $parser->getCss();
-
-        return $css;
+        return $parser->getCss();
     }
 }

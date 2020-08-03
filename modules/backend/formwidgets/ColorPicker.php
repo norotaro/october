@@ -1,6 +1,8 @@
 <?php namespace Backend\FormWidgets;
 
+use Lang;
 use Backend\Classes\FormWidgetBase;
+use ApplicationException;
 
 /**
  * Color picker
@@ -31,27 +33,51 @@ class ColorPicker extends FormWidgetBase
         '#95a5a6', '#7f8c8d',
     ];
 
+    /**
+     * @var bool Allow empty value
+     */
+    public $allowEmpty = false;
+
+    /**
+     * @var bool Show opacity slider
+     */
+    public $showAlpha = false;
+
+    /**
+     * @var bool If true, the color picker is set to read-only mode
+     */
+    public $readOnly = false;
+
+    /**
+     * @var bool If true, the color picker is set to disabled mode
+     */
+    public $disabled = false;
+
     //
     // Object properties
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'colorpicker';
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function init()
     {
         $this->fillFromConfig([
             'availableColors',
+            'allowEmpty',
+            'showAlpha',
+            'readOnly',
+            'disabled',
         ]);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function render()
     {
@@ -66,23 +92,55 @@ class ColorPicker extends FormWidgetBase
     {
         $this->vars['name'] = $this->getFieldName();
         $this->vars['value'] = $value = $this->getLoadValue();
-        $this->vars['availableColors'] = $this->availableColors;
-        $this->vars['isCustomColor'] = !in_array($value, $this->availableColors);
+        $this->vars['availableColors'] = $availableColors = $this->getAvailableColors();
+        $this->vars['allowEmpty'] = $this->allowEmpty;
+        $this->vars['showAlpha'] = $this->showAlpha;
+        $this->vars['readOnly'] = $this->readOnly;
+        $this->vars['disabled'] = $this->disabled;
+        $this->vars['isCustomColor'] = !in_array($value, $availableColors);
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the appropriate list of colors.
+     *
+     * @return array
+     */
+    protected function getAvailableColors()
+    {
+        $availableColors = $this->availableColors;
+        if (is_array($availableColors)) {
+            return $availableColors;
+        }
+        elseif (is_string($availableColors) && !empty($availableColors)) {
+            if ($this->model->methodExists($availableColors)) {
+                return $this->availableColors = $this->model->{$availableColors}(
+                    $this->formField->fieldName,
+                    $this->formField->value,
+                    $this->formField->config
+                );
+            } else {
+                throw new ApplicationException(Lang::get('backend::lang.field.colors_method_not_exists', [
+                    'model'  => get_class($this->model),
+                    'method' => $availableColors,
+                    'field'  => $this->formField->fieldName
+                ]));
+            }
+        }
+    }
+
+    /**
+     * @inheritDoc
      */
     protected function loadAssets()
     {
-        $this->addCss('vendor/colpick/css/colpick.css', 'core');
-        $this->addJs('vendor/colpick/js/colpick.js', 'core');
+        $this->addCss('vendor/spectrum/spectrum.css', 'core');
+        $this->addJs('vendor/spectrum/spectrum.js', 'core');
         $this->addCss('css/colorpicker.css', 'core');
         $this->addJs('js/colorpicker.js', 'core');
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getSaveValue($value)
     {

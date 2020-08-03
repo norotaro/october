@@ -41,12 +41,17 @@ class Search extends WidgetBase
      */
     public $scope;
 
+    /**
+     * @var bool Search on enter key instead of every key stroke.
+     */
+    public $searchOnEnter = false;
+
     //
     // Object properties
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'search';
 
@@ -71,6 +76,7 @@ class Search extends WidgetBase
             'growable',
             'scope',
             'mode',
+            'searchOnEnter',
         ]);
 
         /*
@@ -93,9 +99,8 @@ class Search extends WidgetBase
         if ($this->partial) {
             return $this->controller->makePartial($this->partial);
         }
-        else {
-            return $this->makePartial('search');
-        }
+
+        return $this->makePartial('search');
     }
 
     /**
@@ -106,6 +111,7 @@ class Search extends WidgetBase
         $this->vars['cssClasses'] = implode(' ', $this->cssClasses);
         $this->vars['placeholder'] = Lang::get($this->prompt);
         $this->vars['value'] = $this->getActiveTerm();
+        $this->vars['searchOnEnter'] = $this->searchOnEnter;
     }
 
     /**
@@ -122,7 +128,14 @@ class Search extends WidgetBase
          * Trigger class event, merge results as viewable array
          */
         $params = func_get_args();
-        $result = $this->fireEvent('search.submit', [$params]);
+        try {
+            $result = $this->fireEvent('search.submit', [$params]);
+        } catch (\Throwable $e) {
+            // Remove the search term from the session if the search has failed.
+            $this->setActiveTerm('');
+            throw $e;
+        }
+
         if ($result && is_array($result)) {
             return call_user_func_array('array_merge', $result);
         }
@@ -143,8 +156,7 @@ class Search extends WidgetBase
     {
         if (strlen($term)) {
             $this->putSession('term', $term);
-        }
-        else {
+        } else {
             $this->resetSession();
         }
 

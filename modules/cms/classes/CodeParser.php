@@ -27,12 +27,12 @@ class CodeParser
     /**
      * @var mixed The internal cache, keeps parsed object information during a request.
      */
-    static protected $cache = [];
+    protected static $cache = [];
 
     /**
      * @var string Key for the parsed PHP file information cache.
      */
-    protected $dataCacheKey = 'cms-php-file-data';
+    protected $dataCacheKey = '';
 
     /**
      * Creates the class instance
@@ -42,6 +42,7 @@ class CodeParser
     {
         $this->object = $object;
         $this->filePath = $object->getFilePath();
+        $this->dataCacheKey = Config::get('cache.codeParserDataCacheKey', 'cms-php-file-data');
     }
 
     /**
@@ -121,7 +122,7 @@ class CodeParser
     */
     protected function rebuild($path)
     {
-        $uniqueName = str_replace('.', '', uniqid('', true)).'_'.abs(crc32(mt_rand()));
+        $uniqueName = str_replace('.', '', uniqid('', true)).'_'.md5(mt_rand());
         $className = 'Cms'.$uniqueName.'Class';
 
         $body = $this->object->code;
@@ -191,7 +192,7 @@ class CodeParser
         $path = array_get($data, 'filePath', $this->getCacheFilePath());
 
         if (is_file($path)) {
-            if ($className = $this->extractClassFromFile($path)) {
+            if (($className = $this->extractClassFromFile($path)) && class_exists($className)) {
                 $data['className'] = $className;
                 return $data;
             }
@@ -232,7 +233,7 @@ class CodeParser
      */
     protected function getCacheFilePath()
     {
-        $hash = abs(crc32($this->filePath));
+        $hash = md5($this->filePath);
         $result = storage_path().'/cms/cache/';
         $result .= substr($hash, 0, 2).'/';
         $result .= substr($hash, 2, 2).'/';
@@ -268,10 +269,8 @@ class CodeParser
     {
         $cached = $this->getCachedInfo();
 
-        if ($cached !== null) {
-            if (array_key_exists($this->filePath, $cached)) {
-                return $cached[$this->filePath];
-            }
+        if ($cached !== null && array_key_exists($this->filePath, $cached)) {
+            return $cached[$this->filePath];
         }
 
         return null;
@@ -310,7 +309,7 @@ class CodeParser
 
     /**
      * Writes content with concurrency support and cache busting
-     * This work is based on the Twig_Cache_Filesystem class
+     * This work is based on the Twig\Cache\FilesystemCache class
      */
     protected function writeContentSafe($path, $content)
     {
@@ -334,11 +333,20 @@ class CodeParser
         /*
          * Compile cached file into bytecode cache
          */
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($path, true);
-        }
-        elseif (function_exists('apc_compile_file')) {
-            apc_compile_file($path);
+        if (Config::get('cms.forceBytecodeInvalidation', false)) {
+            $opcache_enabled = ini_get('opcache.enable');
+            $opcache_path = trim(ini_get('opcache.restrict_api'));
+
+            if (!empty($opcache_path) && !starts_with(__FILE__, $opcache_path)) {
+                $opcache_enabled = false;
+            }
+
+            if (function_exists('opcache_invalidate') && $opcache_enabled) {
+                opcache_invalidate($path, true);
+            }
+            elseif (function_exists('apc_compile_file')) {
+                apc_compile_file($path);
+            }
         }
     }
 

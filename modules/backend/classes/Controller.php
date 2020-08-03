@@ -1,11 +1,10 @@
 <?php namespace Backend\Classes;
 
-use App;
-use Str;
 use Lang;
 use View;
 use Flash;
 use Config;
+use Closure;
 use Request;
 use Backend;
 use Session;
@@ -15,15 +14,14 @@ use Exception;
 use BackendAuth;
 use Backend\Models\UserPreference;
 use Backend\Models\Preference as BackendPreference;
-use Cms\Widgets\MediaManager;
-use System\Classes\ErrorHandler;
+use Backend\Widgets\MediaManager;
 use October\Rain\Exception\AjaxException;
 use October\Rain\Exception\SystemException;
 use October\Rain\Exception\ValidationException;
 use October\Rain\Exception\ApplicationException;
-use October\Rain\Extension\Extendable;
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controller as ControllerBase;
 
 /**
  * The Backend base controller class, used by Backend controllers.
@@ -32,18 +30,22 @@ use Illuminate\Http\RedirectResponse;
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class Controller extends Extendable
+class Controller extends ControllerBase
 {
     use \System\Traits\ViewMaker;
     use \System\Traits\AssetMaker;
     use \System\Traits\ConfigMaker;
     use \System\Traits\EventEmitter;
+    use \System\Traits\ResponseMaker;
+    use \System\Traits\SecurityController;
+    use \Backend\Traits\ErrorMaker;
     use \Backend\Traits\WidgetMaker;
+    use \October\Rain\Extension\ExtendableTrait;
 
     /**
-     * @var string Object used for storing a fatal error.
+     * @var array Behaviors implemented by this controller.
      */
-    protected $fatalError;
+    public $implement;
 
     /**
      * @var object Reference the logged in admin user.
@@ -114,11 +116,6 @@ class Controller extends Extendable
     protected $guarded = [];
 
     /**
-     * @var int Response status code
-     */
-    protected $statusCode = 200;
-
-    /**
      * Constructor.
      */
     public function __construct()
@@ -148,13 +145,48 @@ class Controller extends Extendable
         $this->layoutPath[] = '~/modules/' . $relativePath . '/layouts';
         $this->layoutPath[] = '~/plugins/' . $relativePath . '/layouts';
 
-        parent::__construct();
+        /*
+         * Create a new instance of the admin user
+         */
+        $this->user = BackendAuth::getUser();
 
         /*
          * Media Manager widget is available on all back-end pages
          */
-        $manager = new MediaManager($this, 'ocmediamanager');
-        $manager->bindToController();
+        if ($this->user && $this->user->hasAccess('media.*')) {
+            $manager = new MediaManager($this, 'ocmediamanager');
+            $manager->bindToController();
+        }
+
+        $this->extendableConstruct();
+    }
+
+    /**
+     * Extend this object properties upon construction.
+     */
+    public static function extend(Closure $callback)
+    {
+        self::extendableExtendCallback($callback);
+    }
+
+    public function __get($name)
+    {
+        return $this->extendableGet($name);
+    }
+
+    public function __set($name, $value)
+    {
+        $this->extendableSet($name, $value);
+    }
+
+    public function __call($name, $params)
+    {
+        return $this->extendableCall($name, $params);
+    }
+
+    public static function __callStatic($name, $params)
+    {
+        return self::extendableCallStatic($name, $params);
     }
 
     /**
@@ -170,23 +202,18 @@ class Controller extends Extendable
 
         /*
          * Check security token.
+         * @see \System\Traits\SecurityController
          */
         if (!$this->verifyCsrfToken()) {
-            return Response::make(Lang::get('backend::lang.page.invalid_token.label'), 403);
+            return Response::make(Lang::get('system::lang.page.invalid_token.label'), 403);
         }
 
         /*
          * Check forced HTTPS protocol.
+         * @see \System\Traits\SecurityController
          */
         if (!$this->verifyForceSecure()) {
             return Redirect::secure(Request::path());
-        }
-
-        /*
-         * Extensibility
-         */
-        if ($event = $this->fireSystemEvent('backend.page.beforeDisplay', [$action, $params])) {
-            return $event;
         }
 
         /*
@@ -194,14 +221,10 @@ class Controller extends Extendable
          */
         $isPublicAction = in_array($action, $this->publicActions);
 
-        // Create a new instance of the admin user
-        $this->user = BackendAuth::getUser();
-
         /*
          * Check that user is logged in and has permission to view this page
          */
         if (!$isPublicAction) {
-
             /*
              * Not logged in, redirect to login screen or show ajax error.
              */
@@ -219,6 +242,29 @@ class Controller extends Extendable
             }
         }
 
+        /**
+         * @event backend.page.beforeDisplay
+         * Provides an opportunity to override backend page content
+         *
+         * Example usage:
+         *
+         *     Event::listen('backend.page.beforeDisplay', function ((\Backend\Classes\Controller) $backendController, (string) $action, (array) $params) {
+         *         trace_log('redirect all backend pages to google');
+         *         return \Redirect::to('https://google.com');
+         *     });
+         *
+         * Or
+         *
+         *     $backendController->bindEvent('page.beforeDisplay', function ((string) $action, (array) $params) {
+         *         trace_log('redirect all backend pages to google');
+         *         return \Redirect::to('https://google.com');
+         *     });
+         *
+         */
+        if ($event = $this->fireSystemEvent('backend.page.beforeDisplay', [$action, $params])) {
+            return $event;
+        }
+
         /*
          * Set the admin preference locale
          */
@@ -229,30 +275,32 @@ class Controller extends Extendable
          * Execute AJAX event
          */
         if ($ajaxResponse = $this->execAjaxHandlers()) {
-            return $ajaxResponse;
+            $result = $ajaxResponse;
         }
 
         /*
          * Execute postback handler
          */
-        if (
+        elseif (
             ($handler = post('_handler')) &&
             ($handlerResponse = $this->runAjaxHandler($handler)) &&
             $handlerResponse !== true
         ) {
-            return $handlerResponse;
+            $result = $handlerResponse;
         }
 
         /*
          * Execute page action
          */
-        $result = $this->execPageAction($action, $params);
-
-        if (!is_string($result)) {
-            return $result;
+        else {
+            $result = $this->execPageAction($action, $params);
         }
 
-        return Response::make($result, $this->statusCode);
+        /*
+         * Prepare and return response
+         * @see \System\Traits\ResponseMaker
+         */
+        return $this->makeResponse($result);
     }
 
     /**
@@ -342,11 +390,15 @@ class Controller extends Extendable
         $result = null;
 
         if (!$this->actionExists($actionName)) {
-            throw new SystemException(sprintf(
-                "Action %s is not found in the controller %s",
-                $actionName,
-                get_class($this)
-            ));
+            if (Config::get('app.debug', false)) {
+                throw new SystemException(sprintf(
+                    "Action %s is not found in the controller %s",
+                    $actionName,
+                    get_class($this)
+                ));
+            } else {
+                Response::make(View::make('backend::404'), 404);
+            }
         }
 
         // Execute the action
@@ -363,7 +415,7 @@ class Controller extends Extendable
         }
 
         // Load the view
-        if (!$this->suppressView && is_null($result)) {
+        if (!$this->suppressView && $result === null) {
             return $this->makeView($actionName);
         }
 
@@ -393,14 +445,13 @@ class Controller extends Extendable
      */
     protected function execAjaxHandlers()
     {
-
         if ($handler = $this->getAjaxHandler()) {
             try {
                 /*
                  * Validate the handler name
                  */
                 if (!preg_match('/^(?:\w+\:{2})?on[A-Z]{1}[\w+]*$/', $handler)) {
-                    throw new SystemException(Lang::get('cms::lang.ajax_handler.invalid_name', ['name'=>$handler]));
+                    throw new SystemException(Lang::get('backend::lang.ajax_handler.invalid_name', ['name'=>$handler]));
                 }
 
                 /*
@@ -408,6 +459,12 @@ class Controller extends Extendable
                  */
                 if ($partialList = trim(Request::header('X_OCTOBER_REQUEST_PARTIALS'))) {
                     $partialList = explode('&', $partialList);
+
+                    foreach ($partialList as $partial) {
+                        if (!preg_match('/^(?!.*\/\/)[a-z0-9\_][a-z0-9\_\-\/]*$/i', $partial)) {
+                            throw new SystemException(Lang::get('backend::lang.partial.invalid_name', ['name'=>$partial]));
+                        }
+                    }
                 }
                 else {
                     $partialList = [];
@@ -419,7 +476,7 @@ class Controller extends Extendable
                  * Execute the handler
                  */
                 if (!$result = $this->runAjaxHandler($handler)) {
-                    throw new ApplicationException(Lang::get('cms::lang.ajax_handler.not_found', ['name'=>$handler]));
+                    throw new ApplicationException(Lang::get('backend::lang.ajax_handler.not_found', ['name'=>$handler]));
                 }
 
                 /*
@@ -496,6 +553,39 @@ class Controller extends Extendable
      */
     protected function runAjaxHandler($handler)
     {
+        /**
+         * @event backend.ajax.beforeRunHandler
+         * Provides an opportunity to modify an AJAX request
+         *
+         * The parameter provided is `$handler` (the requested AJAX handler to be run)
+         *
+         * Example usage (forwards AJAX handlers to a backend widget):
+         *
+         *     Event::listen('backend.ajax.beforeRunHandler', function ((\Backend\Classes\Controller) $controller, (string) $handler) {
+         *         if (strpos($handler, '::')) {
+         *             list($componentAlias, $handlerName) = explode('::', $handler);
+         *             if ($componentAlias === $this->getBackendWidgetAlias()) {
+         *                 return $this->backendControllerProxy->runAjaxHandler($handler);
+         *             }
+         *         }
+         *     });
+         *
+         * Or
+         *
+         *     $this->controller->bindEvent('ajax.beforeRunHandler', function ((string) $handler) {
+         *         if (strpos($handler, '::')) {
+         *             list($componentAlias, $handlerName) = explode('::', $handler);
+         *             if ($componentAlias === $this->getBackendWidgetAlias()) {
+         *                 return $this->backendControllerProxy->runAjaxHandler($handler);
+         *             }
+         *         }
+         *     });
+         *
+         */
+        if ($event = $this->fireSystemEvent('backend.ajax.beforeRunHandler', [$handler])) {
+            return $event;
+        }
+
         /*
          * Process Widget handler
          */
@@ -517,7 +607,7 @@ class Controller extends Extendable
 
             if (($widget = $this->widget->{$widgetName}) && $widget->methodExists($handlerName)) {
                 $result = $this->runAjaxHandlerForWidget($widget, $handlerName);
-                return ($result) ?: true;
+                return $result ?: true;
             }
         }
         else {
@@ -528,7 +618,7 @@ class Controller extends Extendable
 
             if ($this->methodExists($pageHandler)) {
                 $result = call_user_func_array([$this, $pageHandler], $this->params);
-                return ($result) ?: true;
+                return $result ?: true;
             }
 
             /*
@@ -536,7 +626,7 @@ class Controller extends Extendable
              */
             if ($this->methodExists($handler)) {
                 $result = call_user_func_array([$this, $handler], $this->params);
-                return ($result) ?: true;
+                return $result ?: true;
             }
 
             /*
@@ -548,9 +638,16 @@ class Controller extends Extendable
             foreach ((array) $this->widget as $widget) {
                 if ($widget->methodExists($handler)) {
                     $result = $this->runAjaxHandlerForWidget($widget, $handler);
-                    return ($result) ?: true;
+                    return $result ?: true;
                 }
             }
+        }
+
+        /*
+         * Generic handler that does nothing
+         */
+        if ($handler == 'onAjax') {
+            return true;
         }
 
         return false;
@@ -591,26 +688,6 @@ class Controller extends Extendable
         }
 
         return $id;
-    }
-
-    /**
-     * Sets the status code for the current web response.
-     * @param int $code Status code
-     */
-    public function setStatusCode($code)
-    {
-        $this->statusCode = (int) $code;
-        return $this;
-    }
-
-    /**
-     * Sets standard page variables in the case of a controller error.
-     */
-    public function handleError($exception)
-    {
-        $errorMessage = ErrorHandler::getDetailedMessage($exception);
-        $this->fatalError = $errorMessage;
-        $this->vars['fatalError'] = $errorMessage;
     }
 
     //
@@ -672,52 +749,5 @@ class Controller extends Extendable
     {
         $hiddenHints = UserPreference::forUser()->get('backend::hints.hidden', []);
         return array_key_exists($name, $hiddenHints);
-    }
-
-    //
-    // Security
-    //
-
-    /**
-     * Checks the request data / headers for a valid CSRF token.
-     * Returns false if a valid token is not found. Override this
-     * method to disable the check.
-     * @return bool
-     */
-    protected function verifyCsrfToken()
-    {
-        if (!Config::get('cms.enableCsrfProtection')) {
-            return true;
-        }
-
-        if (in_array(Request::method(), ['HEAD', 'GET', 'OPTIONS'])) {
-            return true;
-        }
-
-        $token = Request::input('_token') ?: Request::header('X-CSRF-TOKEN');
-
-        return Str::equals(
-            Session::getToken(),
-            $token
-        );
-    }
-
-    /**
-     * Checks if the back-end should force a secure protocol (HTTPS) enabled by config.
-     * @return bool
-     */
-    protected function verifyForceSecure()
-    {
-        if (Request::secure() || Request::ajax()) {
-            return true;
-        }
-
-        // @todo if year >= 2018 change default from false to null
-        $forceSecure = Config::get('cms.backendForceSecure', false);
-        if ($forceSecure === null) {
-            $forceSecure = !Config::get('app.debug', false);
-        }
-
-        return !$forceSecure;
     }
 }

@@ -39,6 +39,12 @@
             self.closeTab($(ev.target).closest('ul.nav-tabs > li, div.tab-content > div'), force)
         })
 
+		this.$el.on('mousedown', "li[data-tab-id]", function (ev) {
+            if (ev.key === '2') {
+                $(ev.target).trigger('close.oc.tab');
+            }
+        })
+
         this.$el.on('toggleCollapse.oc.tab', function(ev, data){
             ev.preventDefault()
             $(ev.target).closest('div.tab-content > div').toggleClass('collapsed')
@@ -59,6 +65,9 @@
             $(window).trigger('oc.updateUi')
 
             var tabUrl = $('> a', this).data('tabUrl')
+            if (!tabUrl && $(this).parent('ul').is('[data-linkable]')) {
+            	tabUrl = $('> a', this).attr('href')
+            }
             if (tabUrl) {
                 window.history.replaceState({}, 'Tab link reference', tabUrl)
             }
@@ -78,6 +87,10 @@
         })
 
         this.updateClasses()
+
+        if (location.hash && this.$tabsContainer.is('[data-linkable]')) {
+            $('li > a[href=' + location.hash + ']', this.$tabsContainer).tab('show')
+        }
     }
 
     Tab.prototype.initTab = function(li) {
@@ -94,14 +107,16 @@
             .attr('data-toggle', 'tab')
 
         if (!$anchor.attr('title'))
-            $anchor.attr('title', $anchor.text())
+            $anchor.attr('title', $anchor.text().trim())
 
-        var html = $anchor.html()
-
-        $anchor.html('')
-        $anchor
-            .append($('<span class="title"></span>')
-            .append($('<span></span>').html(html)))
+        // Setup the required tabs markup if it does not exist already.
+        if ($anchor.find('> span.title > span').length < 1) {
+            var html = $anchor.html()
+            $anchor
+                .html('')
+                .append($('<span class="title"></span>')
+                .append($('<span></span>').html(html)))
+        }
 
         var pane = $('> .tab-pane', this.$pagesContainer).eq(tabIndex).attr('id', targetId)
 

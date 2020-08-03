@@ -14,6 +14,11 @@ return [
     'combiner' => [
         'not_found' => "Аб'яднальны файл \":name\" не знойдзены"
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => "Няправільны токен бяспекі",
+        ],
+    ],
     'system' => [
         'name' => "Сістэма",
         'menu_label' => "Сістэма",
@@ -315,5 +320,9 @@ return [
         'manage_editor' => "Кіраванне перавагамі рэдакатару коду",
         'view_the_dashboard' => "Прагледзець панэль кіравання",
         'manage_branding' => "Наладзіць панэль кіравання"
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Няправільны шлях да файлу: \":path\"",
+        'folder_size_items' => "аб'ект(аў)",
+    ],
 ];

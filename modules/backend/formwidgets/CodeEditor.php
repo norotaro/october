@@ -107,16 +107,20 @@ class CodeEditor extends FormWidgetBase
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'codeeditor';
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function init()
     {
         $this->applyEditorPreferences();
+
+        if ($this->formField->disabled) {
+            $this->readOnly = true;
+        }
 
         $this->fillFromConfig([
             'language',
@@ -140,7 +144,7 @@ class CodeEditor extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function render()
     {
@@ -179,7 +183,7 @@ class CodeEditor extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected function loadAssets()
     {
@@ -211,5 +215,4 @@ class CodeEditor extends FormWidgetBase
         $this->displayIndentGuides = $preferences->editor_display_indent_guides;
         $this->showPrintMargin = $preferences->editor_show_print_margin;
     }
-
 }

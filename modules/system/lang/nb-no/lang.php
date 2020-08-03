@@ -11,6 +11,11 @@ return [
     'file' => [
         'create_fail' => 'Kan ikke opprette filen: :name'
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => 'Ugyldig sikkerhets-token',
+        ],
+    ],
     'combiner' => [
         'not_found' => "Kombinasjonsfilen ':name' ble ikke funnet."
     ],
@@ -312,5 +317,9 @@ return [
         'manage_editor' => 'Administrer kodeeditor-innstillinger',
         'view_the_dashboard' => 'Se dashboard',
         'manage_branding' => 'Tilpasse backend'
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Ugyldig filsti: ':path'.",
+        'folder_size_items' => 'fil(er)',
+    ],
 ];

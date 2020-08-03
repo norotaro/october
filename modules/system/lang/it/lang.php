@@ -11,6 +11,11 @@ return [
     'file' => [
         'create_fail' => 'Impossibile creare il file: :name',
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => 'Token di protezione non valido',
+        ],
+    ],
     'combiner' => [
         'not_found' => "Il file combinatore ':name' non è stato trovato.",
     ],
@@ -312,5 +317,9 @@ return [
         'manage_editor' => 'Gestisci preferenze editor di codice',
         'view_the_dashboard' => 'Visualizza la dashboard',
         'manage_branding' => 'Personalizza il pannello di controllo'
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Percorso del file non valido: ':path'.",
+        'folder_size_items' => 'elementi',
+    ],
 ];

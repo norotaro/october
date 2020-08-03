@@ -3,18 +3,21 @@
 return [
     'app' => [
         'name' => 'OctoberCMS',
-        'tagline' => 'Getting back to basics'
+        'tagline' => 'Getting back to basics',
     ],
     'locale' => [
+        'ar' => 'العربية',
         'be' => 'Беларуская',
         'bg' => 'Български',
+        'ca' => 'Català',
         'cs' => 'Čeština',
         'da' => 'Dansk',
         'en' => 'English (United States)',
         'en-au' => 'English (Australia)',
         'en-ca' => 'English (Canada)',
         'en-gb' => 'English (United Kingdom)',
-        'de' => 'Deutsche',
+        'et' => 'Eesti',
+        'de' => 'Deutsch',
         'el' => 'Ελληνικά',
         'es' => 'Español',
         'es-ar' => 'Español (Argentina)',
@@ -25,27 +28,36 @@ return [
         'id' => 'Bahasa Indonesia',
         'it' => 'Italiano',
         'ja' => '日本語',
-        'lv' => 'Latvijas',
+        'kr' => '한국어',
+        'lt' => 'Lietuvių',
+        'lv' => 'Latviešu',
         'nb-no' => 'Norsk (Bokmål)',
         'nl' => 'Nederlands',
-        'pl' => 'Polskie',
+        'pl' => 'Polski',
         'pt-br' => 'Português (Brasil)',
+        'pt-pt' => 'Português (Portugal)',
         'ro' => 'Română',
+        'rs' => 'Srpski',
         'ru' => 'Русский',
+        'fi' => 'Suomi',
         'sv' => 'Svenska',
         'sk' => 'Slovenský',
-        'tr' => 'Türk',
+        'sl' => 'Slovenščina',
+        'th' => 'ไทย',
+        'tr' => 'Türkçe',
+        'uk' => 'Українська мова',
         'zh-cn' => '简体中文',
-        'zh-tw' => '繁體中文'
+        'zh-tw' => '繁體中文',
+        'vn' => 'Tiếng việt',
     ],
     'directory' => [
-        'create_fail' => 'Cannot create directory: :name'
+        'create_fail' => 'Cannot create directory: :name',
     ],
     'file' => [
-        'create_fail' => 'Cannot create file: :name'
+        'create_fail' => 'Cannot create file: :name',
     ],
     'combiner' => [
-        'not_found' => "The combiner file ':name' is not found."
+        'not_found' => "The combiner file ':name' is not found.",
     ],
     'system' => [
         'name' => 'System',
@@ -60,17 +72,19 @@ return [
             'users' => 'Users',
             'system' => 'System',
             'social' => 'Social',
+            'backend' => 'Backend',
             'events' => 'Events',
             'customers' => 'Customers',
-            'my_settings' => 'My Settings'
-        ]
+            'my_settings' => 'My Settings',
+            'notifications' => 'Notifications',
+        ],
     ],
     'theme' => [
         'label' => 'Theme',
         'unnamed' => 'Unnamed theme',
         'name' => [
             'label' => 'Theme Name',
-            'help' => 'Name the theme by its unique code. For example, RainLab.Vanilla'
+            'help' => 'Name the theme by its unique code. For example, RainLab.Vanilla',
         ],
     ],
     'themes' => [
@@ -79,41 +93,53 @@ return [
         'installed' => 'Installed themes',
         'no_themes' => 'There are no themes installed from the marketplace.',
         'recommended' => 'Recommended',
-        'remove_confirm' => 'Are you sure you want to remove this theme?'
+        'remove_confirm' => 'Are you sure you want to remove this theme?',
     ],
     'plugin' => [
         'label' => 'Plugin',
         'unnamed' => 'Unnamed plugin',
         'name' => [
             'label' => 'Plugin Name',
-            'help' => 'Name the plugin by its unique code. For example, RainLab.Blog'
-        ]
+            'help' => 'Name the plugin by its unique code. For example, RainLab.Blog',
+        ],
+        'by_author' => 'By :name',
     ],
     'plugins' => [
         'manage' => 'Manage plugins',
-        'enable_or_disable' => 'Enable or disable',
-        'enable_or_disable_title' => 'Enable or Disable Plugins',
         'install' => 'Install plugins',
         'install_products' => 'Install products',
         'search' => 'search plugins to install...',
         'installed' => 'Installed plugins',
         'no_plugins' => 'There are no plugins installed from the marketplace.',
         'recommended' => 'Recommended',
+        'plugin_label' => 'Plugin',
+        'unknown_plugin' => 'Plugin has been removed from the file system.',
+        'select_label' => 'Select Action...',
+        'bulk_actions_label' => 'Bulk actions',
+        'check_yes' => 'Yes',
+        'check_no' => 'No',
+        'unfrozen' => 'Updates Enabled',
+        'enabled' => 'Plugin Enabled',
+        'freeze' => 'disable updates for',
+        'unfreeze' => 'enable updates for',
+        'enable' => 'enable',
+        'disable' => 'disable',
+        'refresh' => 'reset',
         'remove' => 'Remove',
-        'refresh' => 'Refresh',
-        'disabled_label' => 'Disabled',
-        'disabled_help' => 'Plugins that are disabled are ignored by the application.',
-        'frozen_label' => 'Freeze updates',
-        'frozen_help' => 'Plugins that are frozen will be ignored by the update process.',
-        'selected_amount' => 'Plugins selected: :amount',
-        'remove_confirm' => 'Are you sure you want to remove this plugin?',
-        'remove_success' => 'Successfully removed those plugins from the system.',
-        'refresh_confirm' => 'Are you sure?',
-        'refresh_success' => 'Successfully refreshed those plugins in the system.',
-        'disable_confirm' => 'Are you sure?',
-        'disable_success' => 'Successfully disabled those plugins.',
-        'enable_success' => 'Successfully enabled those plugins.',
-        'unknown_plugin' => 'Plugin has been removed from the file system.'
+        'freeze_label' => 'Disable Updates',
+        'unfreeze_label' => 'Enable Updates',
+        'enable_label' => 'Enable Plugins',
+        'disable_label' => 'Disable Plugins',
+        'refresh_label' => 'Reset Plugin Data',
+        'action_confirm' => 'Are you sure you want to :action these plugins?',
+        'freeze_success' => 'Successfully disabled updates for the selected plugins.',
+        'unfreeze_success' => 'Successfully enabled updates for the selected plugins.',
+        'enable_success' => 'Successfully enabled the selected plugins.',
+        'disable_success' => 'Successfully disabled the selected plugins.',
+        'refresh_confirm' => 'Are you sure you want to reset the selected plugins? This will reset each plugin\'s data, restoring it to the initial install state.',
+        'refresh_success' => 'Successfully reset the selected plugins.',
+        'remove_confirm' => 'Are you sure you want to remove the selected plugins? This will remove all associated data as well.',
+        'remove_success' => 'Successfully removed the selected plugins.',
     ],
     'project' => [
         'name' => 'Project',
@@ -124,10 +150,10 @@ return [
         'id' => [
             'label' => 'Project ID',
             'help' => 'How to find your Project ID',
-            'missing' => 'Please specify a Project ID to use.'
+            'missing' => 'Please specify a Project ID to use.',
         ],
         'detach_confirm' => 'Are you sure you want to detach this project?',
-        'unbind_success' => 'Project has been detached.'
+        'unbind_success' => 'Project has been detached.',
     ],
     'settings' => [
         'menu_label' => 'Settings',
@@ -135,7 +161,7 @@ return [
         'missing_model' => 'The settings page is missing a Model definition.',
         'update_success' => ':name settings updated',
         'return' => 'Return to system settings',
-        'search' => 'Search'
+        'search' => 'Search',
     ],
     'mail' => [
         'log_file' => 'Log file',
@@ -174,19 +200,26 @@ return [
         'ses_key_comment' => 'Enter your SES API key',
         'ses_secret' => 'SES secret',
         'ses_secret_comment' => 'Enter your SES API secret key',
+        'sparkpost' => 'SparkPost',
+        'sparkpost_secret' => 'SparkPost secret',
+        'sparkpost_secret_comment' => 'Enter your SparkPost API secret key',
         'ses_region' => 'SES region',
         'ses_region_comment' => 'Enter your SES region (e.g. us-east-1)',
         'drivers_hint_header' => 'Drivers not installed',
-        'drivers_hint_content' => 'This mail method requires the plugin ":plugin" be installed before you can send mail.'
+        'drivers_hint_content' => 'This mail method requires the plugin ":plugin" be installed before you can send mail.',
     ],
     'mail_templates' => [
         'menu_label' => 'Mail templates',
         'menu_description' => 'Modify the mail templates that are sent to users and administrators, manage email layouts.',
         'new_template' => 'New Template',
         'new_layout' => 'New Layout',
+        'new_partial' => 'New Partial',
         'template' => 'Template',
         'templates' => 'Templates',
+        'partial' => 'Partial',
+        'partials' => 'Partials',
         'menu_layouts_label' => 'Mail Layouts',
+        'menu_partials_label' => 'Mail Partials',
         'layout' => 'Layout',
         'layouts' => 'Layouts',
         'no_layout' => '-- No layout --',
@@ -212,7 +245,60 @@ return [
         'deleting' => 'Deleting Template...',
         'deleting_layout' => 'Deleting Layout...',
         'sending' => 'Sending test message...',
-        'return' => 'Return to template list'
+        'return' => 'Return to template list',
+        'options' => 'Options',
+        'disable_auto_inline_css' => 'Disable automatic inline CSS',
+    ],
+    'mail_brand' => [
+        'menu_label' => 'Mail branding',
+        'menu_description' => 'Modify the colors and appearance of mail templates.',
+        'page_title' => 'Customize mail appearance',
+        'sample_template' => [
+            'heading' => 'Heading',
+            'paragraph' => 'This is a paragraph filled with Lorem Ipsum and a link. Cumque dicta <a>doloremque eaque</a>, enim error laboriosam pariatur possimus tenetur veritatis voluptas.',
+            'table' => [
+                'item' => 'Item',
+                'description' => 'Description',
+                'price' => 'Price',
+                'centered' => 'Centered',
+                'right_aligned' => 'Right-Aligned',
+            ],
+            'buttons' => [
+                'primary' => 'Primary button',
+                'positive' => 'Positive button',
+                'negative' => 'Negative button',
+            ],
+            'panel' => 'How awesome is this panel?',
+            'more' => 'Some more text',
+            'promotion' => 'Coupon code: OCTOBER',
+            'subcopy' => 'This is the subcopy of the email',
+            'thanks' => 'Thanks',
+        ],
+        'fields' => [
+            '_section_background' => 'Background',
+            'body_bg' => 'Body background',
+            'content_bg' => 'Content background',
+            'content_inner_bg' => 'Inner content background',
+            '_section_buttons' => 'Buttons',
+            'button_text_color' => 'Button text color',
+            'button_primary_bg' => 'Primary button background',
+            'button_positive_bg' => 'Positive button background',
+            'button_negative_bg' => 'Negative button background',
+            '_section_type' => 'Typography',
+            'header_color' => 'Header color',
+            'heading_color' => 'Headings color',
+            'text_color' => 'Text color',
+            'link_color' => 'Link color',
+            'footer_color' => 'Footer color',
+            '_section_borders' => 'Borders',
+            'body_border_color' => 'Body border color',
+            'subcopy_border_color' => 'Subcopy border color',
+            'table_border_color' => 'Table border color',
+            '_section_components' => 'Components',
+            'panel_bg' => 'Panel background',
+            'promotion_bg' => 'Promotion background',
+            'promotion_border_color' => 'Promotion border color',
+        ],
     ],
     'install' => [
         'project_label' => 'Attach to Project',
@@ -221,7 +307,7 @@ return [
         'missing_plugin_name' => 'Please specify a Plugin name to install.',
         'missing_theme_name' => 'Please specify a Theme name to install.',
         'install_completing' => 'Finishing installation process',
-        'install_success' => 'Plugin installed successfully'
+        'install_success' => 'Plugin installed successfully',
     ],
     'updates' => [
         'title' => 'Manage Updates',
@@ -237,11 +323,18 @@ return [
         'plugin_version' => 'Version',
         'plugin_author' => 'Author',
         'plugin_not_found' => 'Plugin not found',
+        'plugin_version_not_found' => 'Plugin version not found',
         'core_current_build' => 'Current build',
+        'core_view_changelog' => 'View Changelog',
         'core_build' => 'Build :build',
         'core_build_help' => 'Latest build is available.',
         'core_downloading' => 'Downloading application files',
         'core_extracting' => 'Unpacking application files',
+        'core_set_build' => 'Setting build number',
+        'update_warnings_title' => 'Some issues have been detected and require attention:',
+        'update_warnings_plugin_missing' => 'The :parent_code plugin requires :code to be installed before it will work',
+        'changelog' => 'Changelog',
+        'changelog_view_details' => 'View details',
         'plugins' => 'Plugins',
         'themes' => 'Themes',
         'disabled' => 'Disabled',
@@ -260,20 +353,21 @@ return [
         'force_label' => 'Force update',
         'found' => [
             'label' => 'Found new updates!',
-            'help' => 'Click Update software to begin the update process.'
+            'help' => 'Click Update software to begin the update process.',
         ],
         'none' => [
             'label' => 'No updates',
-            'help' => 'No new updates were found.'
+            'help' => 'No new updates were found.',
         ],
         'important_action' => [
             'empty' => 'Select action',
             'confirm' => 'Confirm update',
-            'skip' => 'Skip this plugin (once only)',
-            'ignore' => 'Skip this plugin (always)'
+            'skip' => 'Skip this update (once only)',
+            'ignore' => 'Skip this update (always)',
         ],
         'important_action_required' => 'Action required',
         'important_view_guide' => 'View upgrade guide',
+        'important_view_release_notes' => 'View release notes',
         'important_alert_text' => 'Some updates need your attention.',
         'details_title' => 'Plugin details',
         'details_view_homepage' => 'View homepage',
@@ -286,7 +380,7 @@ return [
         'details_licence' => 'Licence',
         'details_licence_missing' => 'There is no licence provided.',
         'details_current_version' => 'Current version',
-        'details_author' => 'Author'
+        'details_author' => 'Author',
     ],
     'server' => [
         'connect_error' => 'Error connecting to the server.',
@@ -294,17 +388,17 @@ return [
         'response_invalid' => 'Invalid response from the server.',
         'response_empty' => 'Empty response from the server.',
         'file_error' => 'Server failed to deliver the package.',
-        'file_corrupt' => 'File from server is corrupt.'
+        'file_corrupt' => 'File from server is corrupt.',
     ],
     'behavior' => [
-        'missing_property' => 'Class :class must define property $:property used by :behavior behavior.'
+        'missing_property' => 'Class :class must define property $:property used by :behavior behavior.',
     ],
     'config' => [
         'not_found' => 'Unable to find configuration file :file defined for :location.',
-        'required' => "Configuration used in :location must supply a value ':property'."
+        'required' => "Configuration used in :location must supply a value ':property'.",
     ],
     'zip' => [
-        'extract_failed' => "Unable to extract core file ':file'."
+        'extract_failed' => "Unable to extract core file ':file'.",
     ],
     'event_log' => [
         'hint' => 'This log displays a list of potential errors that occur in the application, such as exceptions and debugging information.',
@@ -312,14 +406,14 @@ return [
         'menu_description' => 'View system log messages with their recorded time and details.',
         'empty_link' => 'Empty event log',
         'empty_loading' => 'Emptying event log...',
-        'empty_success' => 'Successfully emptied the event log.',
+        'empty_success' => 'Event log emptied',
         'return_link' => 'Return to event log',
         'id' => 'ID',
         'id_label' => 'Event ID',
         'created_at' => 'Date & Time',
         'message' => 'Message',
         'level' => 'Level',
-        'preview_title' => 'Event'
+        'preview_title' => 'Event',
     ],
     'request_log' => [
         'hint' => 'This log displays a list of browser requests that may require attention. For example, if a visitor opens a CMS page that cannot be found, a record is created with the status code 404.',
@@ -327,7 +421,7 @@ return [
         'menu_description' => 'View bad or redirected requests, such as Page not found (404).',
         'empty_link' => 'Empty request log',
         'empty_loading' => 'Emptying request log...',
-        'empty_success' => 'Successfully emptied the request log.',
+        'empty_success' => 'Request log emptied',
         'return_link' => 'Return to request log',
         'id' => 'ID',
         'id_label' => 'Log ID',
@@ -335,7 +429,7 @@ return [
         'referer' => 'Referers',
         'url' => 'URL',
         'status_code' => 'Status',
-        'preview_title' => 'Request'
+        'preview_title' => 'Request',
     ],
     'permissions' => [
         'name' => 'System',
@@ -345,9 +439,45 @@ return [
         'manage_mail_templates' => 'Manage mail templates',
         'manage_mail_settings' => 'Manage mail settings',
         'manage_other_administrators' => 'Manage other administrators',
+        'impersonate_users' => 'Impersonate users',
         'manage_preferences' => 'Manage backend preferences',
         'manage_editor' => 'Manage code editor preferences',
         'view_the_dashboard' => 'View the dashboard',
-        'manage_branding' => 'Customize the back-end'
-    ]
+        'manage_default_dashboard' => 'Manage the default dashboard',
+        'manage_branding' => 'Customize the back-end',
+    ],
+    'log' => [
+        'menu_label' => 'Log settings',
+        'menu_description' => 'Specify which areas should use logging.',
+        'default_tab' => 'Logging',
+        'log_events' => 'Log system events',
+        'log_events_comment' => 'Store system events in the database in addition to the file-based log.',
+        'log_requests' => 'Log bad requests',
+        'log_requests_comment' => 'Browser requests that may require attention, such as 404 errors.',
+        'log_theme' => 'Log theme changes',
+        'log_theme_comment' => 'When a change is made to the theme using the back-end.',
+    ],
+    'media' => [
+        'invalid_path' => "Invalid file path specified: ':path'.",
+        'folder_size_items' => 'item(s)',
+    ],
+    'page' => [
+        'custom_error' => [
+            'label' => 'Page error',
+            'help' => 'We\'re sorry, but something went wrong and the page cannot be displayed.',
+        ],
+        'invalid_token' => [
+            'label' => 'Invalid security token',
+        ],
+        'maintenance' => [
+            'label' => "We'll be right back!",
+            'help' => "We're currently down for maintenance, check back soon!",
+            'message' => 'Message:',
+            'available_at' => 'Try again after:',
+        ],
+    ],
+    'pagination' => [
+        'previous' => 'Previous',
+        'next' => 'Next',
+    ],
 ];

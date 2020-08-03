@@ -81,7 +81,7 @@
         background-image: url('@{image-path}/bitmap-icons.png');
 
         &.plus { background-position: right -124px; }
-        &.search { background-position: right -83px; }
+        &.search { background-position: right -84px; }
         &.user { background-position: right -41px; }
         &.lock { background-position: right 0; }
     }
@@ -91,6 +91,20 @@
         //.transition(width 0.2s);
         &:focus, &:active {
             width: 200px !important;
+        }
+
+        @media (max-width: @screen-xs) {
+            width: 40px;
+            text-indent: -999px;
+
+            &:focus, &:active {
+                text-indent: 0;
+                width: 100px !important;
+            }
+
+            &.icon {
+                padding-right: 0 !important;
+            }
         }
     }
 }
@@ -110,7 +124,8 @@
     .box-sizing(border-box);
 
     &.is-required {
-        > label:after {
+        > label:not(.custom-switch):after,
+        > .field-switch > label:after {
             background-color: @color-form-required-asterisk;
             width: 5px;
             height: 5px;
@@ -140,6 +155,18 @@
         clear: right;
     }
 
+    &.clear-full {
+        clear: both;
+    }
+
+    &.clear-left {
+        clear: left;
+    }
+
+    &.clear-right {
+        clear: right;
+    }
+
     &.layout-relative {
         padding-bottom: 0;
     }
@@ -150,6 +177,11 @@
 
     &.number-field {
         > .form-control { text-align: right; }
+    }
+
+    &.radio-align {
+        padding-left: 28px;
+        margin-top: -20px;
     }
 
     &.checkbox-align {
@@ -197,6 +229,7 @@
         height: auto;
         min-height: 38px;
         border-color: #eee;
+        word-break: break-word;
         .box-shadow(none);
     }
 
@@ -295,33 +328,56 @@
     &.size-giant { min-height: @size-giant; }
 }
 
-.field-checkboxlist:not(.is-scrollable) {
-    padding: 20px 20px 2px 20px;
-    .border-radius(@border-radius-base);
-    background: @color-form-checkboxlist-background;
-    border: 1px solid @color-form-checkboxlist-border;
+.field-checkboxlist {
+    .field-checkboxlist-inner {
+        .border-radius(@border-radius-base);
+        background: @color-form-checkboxlist-background;
+        border: 1px solid @color-form-checkboxlist-border;
+    }
 
-    //.checkbox:last-of-type {
-    //    margin-bottom: 0;
-    //}
-}
+    &:not(.is-scrollable) {
+        .field-checkboxlist-inner {
+            padding: 15px 15px 2px 15px;
+        }
+    }
 
-.field-checkboxlist.is-scrollable {
-    small {
-        color: @text-muted;
+    .checkboxlist-controls {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        -webkit-box-align: baseline;
+        -ms-flex-align: baseline;
+        align-items: baseline;
+        > div {
+            padding-bottom: 7px;
+
+            > a {
+                font-size: 13px;
+                margin-right: 20px;
+                text-decoration: none;
+                > i {
+                    color: @text-muted;
+                    margin: 0 4px;
+                }
+
+                &:hover > i {
+                    color: @color-label;
+                }
+            }
+        }
     }
 }
 
 .field-checkboxlist-scrollable {
-    background: @color-form-checkboxlist-background;
-    border: 1px solid @color-form-checkboxlist-border;
     padding-left: 15px;
     height: @size-large + 100;
 
     // First checkbox
     .checkbox {
         margin-top: 15px;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
 
     // All others
@@ -358,6 +414,11 @@
         padding-left: 15px;
         padding-right: 15px;
 
+        &.clear-record {
+            right: 30px;
+            margin-top: -44px;
+        }
+
         i {
             font-size: 14px;
         }
@@ -378,12 +439,20 @@
     }
 }
 
+.recordfinder-list {
+    .list-footer {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
+
 .recordfinder-search {
     background-position: right -81px !important;
-    border-top: none  !important;
-    border-left: none  !important;
-    border-right: none  !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
     border-radius: 0;
+    padding-left: 20px;
 }
 
 .form-buttons {
@@ -452,11 +521,6 @@ body.slim-container {
     .form-control {
         display: inline-block;
         margin-right: 15px;
-
-        // @deprecated Remove if year >= 2017 (3 lines below)
-        &.width-50 { width: 50px; }
-        &.width-100 { width: 100px; }
-        &.width-150 { width: 150px;}
     }
 
     input[type=text].form-control, label {

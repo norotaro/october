@@ -13,6 +13,8 @@
 @color-group-bg:                #f1f3f4;
 @color-error-component-bg:      #ab2a1c;
 @color-error-component-text:    #ffffff;
+@color-warning-component-bg:    #ffc107;
+@color-warning-component-text:  #343a40;
 
 .component-lego-icon() {
     position: absolute;
@@ -85,7 +87,7 @@ div.control-componentlist div.components div.layout-cell {
             &.description {
                 padding: 0 15px 10px;
                 margin-top: 8px;
-                font-weight: 100;
+                font-weight: 400;
                 font-size: @font-size-base - 3;
                 line-height: 150%;
             }
@@ -135,6 +137,18 @@ div.control-componentlist {
 
                     &:after {
                         color: @color-error-component-bg;
+                    }
+                }
+            }
+
+            &.warning-component {
+                background: @color-warning-component-bg;
+
+                > div {
+                    color: @color-warning-component-text;
+
+                    &:after {
+                        color: @color-warning-component-bg;
                     }
                 }
             }
@@ -237,12 +251,6 @@ div.control-componentlist {
                     &:hover {
                         .opacity(.5);
                         text-decoration: none;
-                    }
-                }
-
-                &:hover {
-                    a.remove {
-                        color: @color-component-hover-text;
                     }
                 }
             }

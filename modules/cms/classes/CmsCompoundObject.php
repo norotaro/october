@@ -6,9 +6,12 @@ use Cache;
 use Config;
 use Cms\Twig\Loader as TwigLoader;
 use Cms\Twig\Extension as CmsTwigExtension;
+use Cms\Components\ViewBag;
+use Cms\Helpers\Cms as CmsHelpers;
 use System\Twig\Extension as SystemTwigExtension;
 use October\Rain\Halcyon\Processors\SectionParser;
-use Twig_Environment;
+use Twig\Source as TwigSource;
+use Twig\Environment as TwigEnvironment;
 use ApplicationException;
 
 /**
@@ -71,7 +74,7 @@ class CmsCompoundObject extends CmsObject
     /**
      * @var array|null Cache for component properties.
      */
-    protected static $objectComponentPropertyMap = null;
+    protected static $objectComponentPropertyMap;
 
     /**
      * @var mixed Cache store for the getViewBag method.
@@ -141,12 +144,7 @@ class CmsCompoundObject extends CmsObject
      */
     protected function checkSafeMode()
     {
-        $safeMode = Config::get('cms.enableSafeMode', null);
-        if ($safeMode === null) {
-            $safeMode = !Config::get('app.debug', false);
-        }
-
-        if ($safeMode && $this->isDirty('code') && strlen(trim($this->code))) {
+        if (CmsHelpers::safeModeEnabled() && $this->isDirty('code') && strlen(trim($this->code))) {
             throw new ApplicationException(Lang::get('cms::lang.cms_object.safe_mode_enabled'));
         }
     }
@@ -206,7 +204,7 @@ class CmsCompoundObject extends CmsObject
 
     /**
      * Returns a component by its name.
-     * This method is used only in the back-end and for internal system needs when 
+     * This method is used only in the back-end and for internal system needs when
      * the standard way to access components is not an option.
      * @param string $componentName Specifies the component name.
      * @return \Cms\Classes\ComponentBase Returns the component instance or null.
@@ -235,7 +233,6 @@ class CmsCompoundObject extends CmsObject
         $componentName = $componentManager->resolve($componentName);
 
         foreach ($this->settings['components'] as $sectionName => $values) {
-
             $result = $sectionName;
 
             if ($sectionName == $componentName) {
@@ -255,7 +252,6 @@ class CmsCompoundObject extends CmsObject
             if ($sectionName == $componentName) {
                 return $result;
             }
-
         }
 
         return false;
@@ -269,7 +265,7 @@ class CmsCompoundObject extends CmsObject
      */
     public function getComponentProperties($componentName)
     {
-        $key = crc32($this->theme->getPath()).'component-properties';
+        $key = md5($this->theme->getPath()).'component-properties';
 
         if (self::$objectComponentPropertyMap !== null) {
             $objectComponentMap = self::$objectComponentPropertyMap;
@@ -277,7 +273,7 @@ class CmsCompoundObject extends CmsObject
         else {
             $cached = Cache::get($key, false);
             $unserialized = $cached ? @unserialize(@base64_decode($cached)) : false;
-            $objectComponentMap = $unserialized ? $unserialized : [];
+            $objectComponentMap = $unserialized ?: [];
             if ($objectComponentMap) {
                 self::$objectComponentPropertyMap = $objectComponentMap;
             }
@@ -299,7 +295,7 @@ class CmsCompoundObject extends CmsObject
         else {
             foreach ($this->settings['components'] as $name => $settings) {
                 $nameParts = explode(' ', $name);
-                if (count($nameParts > 1)) {
+                if (count($nameParts) > 1) {
                     $name = trim($nameParts[0]);
                 }
 
@@ -336,7 +332,7 @@ class CmsCompoundObject extends CmsObject
      */
     public static function clearCache($theme)
     {
-        $key = crc32($theme->getPath()).'component-properties';
+        $key = md5($theme->getPath()).'component-properties';
         Cache::forget($key);
     }
 
@@ -346,9 +342,9 @@ class CmsCompoundObject extends CmsObject
 
     /**
      * Returns the configured view bag component.
-     * This method is used only in the back-end and for internal system needs when 
+     * This method is used only in the back-end and for internal system needs when
      * the standard way to access components is not an option.
-     * @return \Cms\Classes\ViewBag Returns the view bag component instance.
+     * @return \Cms\Components\ViewBag Returns the view bag component instance.
      */
     public function getViewBag()
     {
@@ -403,16 +399,16 @@ class CmsCompoundObject extends CmsObject
      * @link http://twig.sensiolabs.org/doc/internals.html Twig internals
      * @param mixed $markup Specifies the markup content.
      * Use FALSE to load the content from the markup section.
-     * @return Twig_Node_Module A node tree
+     * @return Twig\Node\ModuleNode A node tree
      */
     public function getTwigNodeTree($markup = false)
     {
         $loader = new TwigLoader();
-        $twig = new Twig_Environment($loader, []);
+        $twig = new TwigEnvironment($loader, []);
         $twig->addExtension(new CmsTwigExtension());
         $twig->addExtension(new SystemTwigExtension);
 
-        $stream = $twig->tokenize($markup === false ? $this->markup : $markup, 'getTwigNodeTree');
+        $stream = $twig->tokenize(new TwigSource($markup === false ? $this->markup : $markup, 'getTwigNodeTree'));
         return $twig->parse($stream);
     }
 
@@ -488,5 +484,4 @@ class CmsCompoundObject extends CmsObject
 
         return parent::__call($method, $parameters);
     }
-
 }

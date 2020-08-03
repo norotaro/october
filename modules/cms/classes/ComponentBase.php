@@ -3,8 +3,6 @@
 use Str;
 use Lang;
 use Config;
-use Cms\Classes\CodeBase;
-use Cms\Classes\CmsException;
 use October\Rain\Extension\Extendable;
 use BadMethodCallException;
 
@@ -41,7 +39,7 @@ abstract class ComponentBase extends Extendable
     public $isHidden = false;
 
     /**
-     * @var string Icon of the plugin that defines the component. 
+     * @var string Icon of the plugin that defines the component.
      * This field is used by the CMS internally.
      */
     public $pluginIcon;
@@ -121,7 +119,7 @@ abstract class ComponentBase extends Extendable
     }
 
     /**
-     * Executed when this component is bound to a page or layout, part of 
+     * Executed when this component is bound to a page or layout, part of
      * the page life cycle.
      */
     public function onRun()
@@ -153,8 +151,34 @@ abstract class ComponentBase extends Extendable
      */
     public function runAjaxHandler($handler)
     {
-        /*
-         * Extensibility
+        /**
+         * @event cms.component.beforeRunAjaxHandler
+         * Provides an opportunity to modify an AJAX request to a component before it is processed by the component
+         *
+         * The parameter provided is `$handler` (the requested AJAX handler to be run)
+         *
+         * Example usage (forwards AJAX handlers to a backend widget):
+         *
+         *     Event::listen('cms.component.beforeRunAjaxHandler', function ((\Cms\Classes\ComponentBase) $component, (string) $handler) {
+         *         if (strpos($handler, '::')) {
+         *             list($componentAlias, $handlerName) = explode('::', $handler);
+         *             if ($componentAlias === $this->getBackendWidgetAlias()) {
+         *                 return $this->backendControllerProxy->runAjaxHandler($handler);
+         *             }
+         *         }
+         *     });
+         *
+         * Or
+         *
+         *     $this->controller->bindEvent('component.beforeRunAjaxHandler', function ((string) $handler) {
+         *         if (strpos($handler, '::')) {
+         *             list($componentAlias, $handlerName) = explode('::', $handler);
+         *             if ($componentAlias === $this->getBackendWidgetAlias()) {
+         *                 return $this->backendControllerProxy->runAjaxHandler($handler);
+         *             }
+         *         }
+         *     });
+         *
          */
         if ($event = $this->fireSystemEvent('cms.component.beforeRunAjaxHandler', [$handler])) {
             return $event;
@@ -162,8 +186,28 @@ abstract class ComponentBase extends Extendable
 
         $result = $this->$handler();
 
-        /*
-         * Extensibility
+        /**
+         * @event cms.component.runAjaxHandler
+         * Provides an opportunity to modify an AJAX request to a component after it is processed by the component
+         *
+         * The parameters provided are `$handler` (the requested AJAX handler to be run) and `$result` (the result of the component processing the request)
+         *
+         * Example usage (Logs requests and their response):
+         *
+         *     Event::listen('cms.component.beforeRunHandler', function ((\Cms\Classes\ComponentBase) $component, (string) $handler, (mixed) $result) {
+         *         if (in_array($handler, $interceptHandlers)) {
+         *             return 'request has been intercepted, original response: ' . json_encode($result);
+         *         }
+         *     });
+         *
+         * Or
+         *
+         *     $this->controller->bindEvent('componenet.beforeRunAjaxHandler', function ((string) $handler, (mixed) $result) {
+         *         if (in_array($handler, $interceptHandlers)) {
+         *             return 'request has been intercepted, original response: ' . json_encode($result);
+         *         }
+         *     });
+         *
          */
         if ($event = $this->fireSystemEvent('cms.component.runAjaxHandler', [$handler, $result])) {
             return $event;
@@ -260,9 +304,10 @@ abstract class ComponentBase extends Extendable
     public function __call($method, $parameters)
     {
         try {
-            parent::__call($method, $parameters);
+            return parent::__call($method, $parameters);
         }
-        catch (BadMethodCallException $ex) {}
+        catch (BadMethodCallException $ex) {
+        }
 
         if (method_exists($this->controller, $method)) {
             return call_user_func_array([$this->controller, $method], $parameters);

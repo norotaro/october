@@ -53,21 +53,23 @@ return [
         ],
 
         'mysql' => [
-            'driver'    => 'mysql',
-            'host'      => '127.0.0.1',
-            'port'      => '',
-            'database'  => 'database',
-            'username'  => 'root',
-            'password'  => '',
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
+            'driver'     => 'mysql',
+            'engine'     => 'InnoDB',
+            'host'       => 'localhost',
+            'port'       => 3306,
+            'database'   => 'database',
+            'username'   => 'root',
+            'password'   => '',
+            'charset'    => 'utf8mb4',
+            'collation'  => 'utf8mb4_unicode_ci',
+            'prefix'     => '',
+            'varcharmax' => 191,
         ],
 
         'pgsql' => [
             'driver'   => 'pgsql',
-            'host'     => '127.0.0.1',
-            'port'     => '',
+            'host'     => 'localhost',
+            'port'     => 5432,
             'database' => 'database',
             'username' => 'root',
             'password' => '',
@@ -78,8 +80,8 @@ return [
 
         'sqlsrv' => [
             'driver'   => 'sqlsrv',
-            'host'     => '127.0.0.1',
-            'port'     => '',
+            'host'     => 'localhost',
+            'port'     => 1433,
             'database' => 'database',
             'username' => 'root',
             'password' => '',
@@ -125,4 +127,20 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Use DB configuration for testing
+    |--------------------------------------------------------------------------
+    |
+    | When running plugin tests OctoberCMS by default uses SQLite in memory.
+    | You can override this behavior by setting `useConfigForTesting` to true.
+    |
+    | After that OctoberCMS will take DB parameters from the config.
+    | If file `/config/testing/database.php` exists, config will be read from it,
+    | but remember that when not specified it will use parameters specified in
+    | `/config/database.php`.
+    |
+    */
+
+    'useConfigForTesting' => false,
 ];

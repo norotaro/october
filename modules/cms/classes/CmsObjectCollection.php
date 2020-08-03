@@ -1,6 +1,5 @@
 <?php namespace Cms\Classes;
 
-use ApplicationException;
 use October\Rain\Support\Collection as CollectionBase;
 
 /**
@@ -19,12 +18,10 @@ class CmsObjectCollection extends CollectionBase
      */
     public function withComponent($components, $callback = null)
     {
-        return $this->filter(function($object) use ($components, $callback) {
-
+        return $this->filter(function ($object) use ($components, $callback) {
             $hasComponent = false;
 
             foreach ((array) $components as $componentName) {
-
                 if (!$callback && $object->hasComponent($componentName)) {
                     $hasComponent = true;
                 }
@@ -47,7 +44,7 @@ class CmsObjectCollection extends CollectionBase
      */
     public function where($property, $value, $strict = true)
     {
-        return $this->filter(function($object) use ($property, $value, $strict) {
+        return $this->filter(function ($object) use ($property, $value, $strict) {
 
             if (!array_key_exists($property, $object->settings)) {
                 return false;
@@ -69,12 +66,11 @@ class CmsObjectCollection extends CollectionBase
      */
     public function whereComponent($components, $property, $value, $strict = false)
     {
-        return $this->filter(function($object) use ($components, $property, $value, $strict) {
+        return $this->filter(function ($object) use ($components, $property, $value, $strict) {
 
             $hasComponent = false;
 
             foreach ((array) $components as $componentName) {
-
                 if (!$componentAlias = $object->hasComponent($componentName)) {
                     continue;
                 }
@@ -102,5 +98,4 @@ class CmsObjectCollection extends CollectionBase
             return $hasComponent;
         });
     }
-
 }

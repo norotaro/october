@@ -1,7 +1,8 @@
 <?php namespace Backend\FormWidgets;
 
+use Html;
 use Markdown;
-use Backend\Models\EditorPreferences;
+use BackendAuth;
 use Backend\Classes\FormWidgetBase;
 
 /**
@@ -22,6 +23,21 @@ class MarkdownEditor extends FormWidgetBase
      */
     public $mode = 'tab';
 
+    /**
+     * @var bool Render preview with safe markdown.
+     */
+    public $safe = false;
+
+    /**
+     * @var bool If true, the editor is set to read-only mode
+     */
+    public $readOnly = false;
+
+    /**
+     * @var bool If true, the editor is set to read-only mode
+     */
+    public $disabled = false;
+
     //
     // Object properties
     //
@@ -38,6 +54,9 @@ class MarkdownEditor extends FormWidgetBase
     {
         $this->fillFromConfig([
             'mode',
+            'safe',
+            'readOnly',
+            'disabled',
         ]);
     }
 
@@ -60,6 +79,9 @@ class MarkdownEditor extends FormWidgetBase
         $this->vars['size'] = $this->formField->size;
         $this->vars['name'] = $this->getFieldName();
         $this->vars['value'] = $this->getLoadValue();
+        $this->vars['readOnly'] = $this->readOnly;
+        $this->vars['disabled'] = $this->disabled;
+        $this->vars['useMediaManager'] = BackendAuth::getUser()->hasAccess('media.manage_media');
     }
 
     /**
@@ -72,14 +94,47 @@ class MarkdownEditor extends FormWidgetBase
         $this->addJs('/modules/backend/formwidgets/codeeditor/assets/js/build-min.js', 'core');
     }
 
+    /**
+     * Check to see if the generated HTML should be cleaned to remove any potential XSS
+     *
+     * @return boolean
+     */
+    protected function shouldCleanHtml()
+    {
+        $user = BackendAuth::getUser();
+        return !$user || !$user->hasAccess('backend.allow_unsafe_markdown');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSaveValue($value)
+    {
+        if ($this->shouldCleanHtml()) {
+            $value = Html::clean($value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * AJAX handler to render the markdown as HTML
+     *
+     * @return array ['preview' => $generatedHTML]
+     */
     public function onRefresh()
     {
         $value = post($this->getFieldName());
-        $previewHtml = Markdown::parse($value);
+        $previewHtml = $this->safe
+            ? Markdown::parseSafe($value)
+            : Markdown::parse($value);
+
+        if ($this->shouldCleanHtml()) {
+            $previewHtml = Html::clean($previewHtml);
+        }
 
         return [
             'preview' => $previewHtml
         ];
     }
-
 }

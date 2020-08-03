@@ -7,11 +7,11 @@ return [
         'file_already_exists' => "File ':name' already exists.",
         'error_saving' => "Error saving file ':name'. Please check write permissions.",
         'error_creating_directory' => 'Error creating directory :name. Please check write permissions.',
-        'invalid_file_extension'=>'Invalid file extension: :invalid. Allowed extensions are: :allowed.',
+        'invalid_file_extension' => 'Invalid file extension: :invalid. Allowed extensions are: :allowed.',
         'error_deleting' => "Error deleting the template file ':name'. Please check write permissions.",
         'delete_success' => 'Templates deleted: :count.',
         'file_name_required' => 'The File Name field is required.',
-        'safe_mode_enabled' => 'Safe mode is currently enabled.',
+        'safe_mode_enabled' => 'Safe mode is currently enabled. Editing the PHP code of CMS templates is disabled. To disable safe mode, set the `cms.enableSafeMode` configuration value to `false`.',
     ],
     'dashboard' => [
         'active_theme' => [
@@ -19,21 +19,23 @@ return [
             'online' => 'Online',
             'maintenance' => 'In maintenance',
             'manage_themes' => 'Manage themes',
-        ]
+            'customize_theme' => 'Customize theme',
+        ],
     ],
     'theme' => [
         'not_found_name' => "The theme ':name' is not found.",
+        'by_author' => 'By :name',
         'active' => [
             'not_set' => 'The active theme is not set.',
-            'not_found' => 'The active theme is not found.'
+            'not_found' => 'The active theme is not found.',
         ],
         'edit' => [
             'not_set' => 'The edit theme is not set.',
             'not_found' => 'The edit theme is not found.',
-            'not_match' => "The object you're trying to access doesn't belong to the theme being edited. Please reload the page."
+            'not_match' => "The object you're trying to access doesn't belong to the theme being edited. Please reload the page.",
         ],
         'settings_menu' => 'Front-end theme',
-        'settings_menu_description' => 'Preview the list of installed themes and select an active theme.',
+        'settings_menu_description' => 'Manage the front-end theme and customization options.',
         'default_tab' => 'Properties',
         'name_label' => 'Name',
         'name_create_placeholder' => 'New theme name',
@@ -45,6 +47,8 @@ return [
         'homepage_placeholder' => 'Website URL',
         'code_label' => 'Code',
         'code_placeholder' => 'A unique code for this theme used for distribution',
+        'preview_image_label' => 'Preview image',
+        'preview_image_placeholder' => 'The path of theme preview image.',
         'dir_name_label' => 'Directory name',
         'dir_name_create_label' => 'The destination theme directory',
         'theme_label' => 'Theme',
@@ -74,7 +78,7 @@ return [
         'export_folders_label' => 'Folders',
         'export_folders_comment' => 'Please select the theme folders you would like to export',
         'delete_button' => 'Delete',
-        'delete_confirm' => 'Are you sure you want to delete this theme? It cannot be undone!',
+        'delete_confirm' => 'Delete this theme? It cannot be undone!',
         'delete_active_theme_failed' => 'Cannot delete the active theme, try making another theme active first.',
         'delete_theme_success' => 'Theme deleted!',
         'create_title' => 'Create theme',
@@ -101,11 +105,11 @@ return [
         'not_found_name' => "The page ':name' is not found",
         'not_found' => [
             'label' => 'Page not found',
-            'help' => 'The requested page cannot be found.'
+            'help' => 'The requested page cannot be found.',
         ],
         'custom_error' => [
             'label' => 'Page error',
-            'help' => "We're sorry, but something went wrong and the page cannot be displayed."
+            'help' => "We're sorry, but something went wrong and the page cannot be displayed.",
         ],
         'menu_label' => 'Pages',
         'unsaved_label' => 'Unsaved page(s)',
@@ -118,7 +122,7 @@ return [
         'cms_page' => 'CMS page',
         'title' => 'Page title',
         'url' => 'Page URL',
-        'file_name' => 'Page file name'
+        'file_name' => 'Page file name',
     ],
     'layout' => [
         'not_found_name' => "The layout ':name' is not found",
@@ -127,7 +131,7 @@ return [
         'no_list_records' => 'No layouts found',
         'new' => 'New layout',
         'delete_confirm_multiple' => 'Delete selected layouts?',
-        'delete_confirm_single' => 'Delete this layout?'
+        'delete_confirm_single' => 'Delete this layout?',
     ],
     'partial' => [
         'not_found_name' => "The partial ':name' is not found.",
@@ -137,7 +141,7 @@ return [
         'no_list_records' => 'No partials found',
         'delete_confirm_multiple' => 'Delete selected partials?',
         'delete_confirm_single' => 'Delete this partial?',
-        'new' => 'New partial'
+        'new' => 'New partial',
     ],
     'content' => [
         'not_found_name' => "The content file ':name' is not found.",
@@ -146,18 +150,18 @@ return [
         'no_list_records' => 'No content files found',
         'delete_confirm_multiple' => 'Delete selected content files or directories?',
         'delete_confirm_single' => 'Delete this content file?',
-        'new' => 'New content file'
+        'new' => 'New content file',
     ],
     'ajax_handler' => [
         'invalid_name' => 'Invalid AJAX handler name: :name.',
-        'not_found' => "AJAX handler ':name' was not found."
+        'not_found' => "AJAX handler ':name' was not found.",
     ],
     'cms' => [
-        'menu_label' => 'CMS'
+        'menu_label' => 'CMS',
     ],
     'sidebar' => [
         'add' => 'Add',
-        'search' => 'Search...'
+        'search' => 'Search...',
     ],
     'editor' => [
         'settings' => 'Settings',
@@ -179,9 +183,17 @@ return [
         'enter_fullscreen' => 'Enter fullscreen mode',
         'exit_fullscreen' => 'Exit fullscreen mode',
         'open_searchbox' => 'Open Search box',
-        'close_searchbox'  => 'Close Search box',
+        'close_searchbox' => 'Close Search box',
         'open_replacebox' => 'Open Replace box',
-        'close_replacebox'  => 'Close Replace box'
+        'close_replacebox' => 'Close Replace box',
+        'commit' => 'Commit',
+        'reset' => 'Reset',
+        'commit_confirm' => 'Are you sure you want to commit your changes to this file to the filesystem? This will overwrite the existing file on the filesystem',
+        'reset_confirm' => 'Are you sure you want to reset this file to the copy that is on the filesystem? This will completely replace it with the file that is on the filesystem',
+        'committing' => 'Committing',
+        'resetting' => 'Resetting',
+        'commit_success' => 'The :type has been committed to the filesystem',
+        'reset_success' => 'The :type has been reset to the filesystem version',
     ],
     'asset' => [
         'menu_label' => 'Assets',
@@ -203,7 +215,7 @@ return [
         'invalid_path' => 'Path can contain only digits, Latin letters, spaces and the following symbols: ._-/',
         'error_deleting_file' => 'Error deleting file :name.',
         'error_deleting_dir_not_empty' => 'Error deleting directory :name. The directory is not empty.',
-        'error_deleting_dir' => 'Error deleting file :name.',
+        'error_deleting_dir' => 'Error deleting directory :name.',
         'invalid_name' => 'Name can contain only digits, Latin letters, spaces and the following symbols: ._-',
         'original_not_found' => 'Original file or directory not found',
         'already_exists' => 'File or directory with this name already exists',
@@ -225,7 +237,7 @@ return [
         'error_deleting_directory' => 'Error deleting the original directory :dir',
         'no_list_records' => 'No files found',
         'delete_confirm' => 'Delete selected files or directories?',
-        'path' => 'Path'
+        'path' => 'Path',
     ],
     'component' => [
         'menu_label' => 'Components',
@@ -237,7 +249,10 @@ return [
         'invalid_request' => 'The template cannot be saved because of invalid component data.',
         'no_records' => 'No components found',
         'not_found' => "The component ':name' is not found.",
-        'method_not_found' => "The component ':name' does not contain a method ':method'."
+        'no_default_partial' => "This component does not have a 'default' partial",
+        'method_not_found' => "The component ':name' does not contain a method ':method'.",
+        'soft_component' => 'Soft Component',
+        'soft_component_description' => 'This component is missing but optional.',
     ],
     'template' => [
         'invalid_type' => 'Unknown template type.',
@@ -245,7 +260,7 @@ return [
         'saved' => 'Template saved.',
         'no_list_records' => 'No records found',
         'delete_confirm' => 'Delete selected templates?',
-        'order_by' =>'Order by'
+        'order_by' => 'Order by',
     ],
     'permissions' => [
         'name' => 'CMS',
@@ -255,72 +270,35 @@ return [
         'manage_layouts' => 'Create, modify and delete CMS layouts',
         'manage_partials' => 'Create, modify and delete CMS partials',
         'manage_themes' => 'Activate, deactivate and configure CMS themes',
-        'manage_media' => 'Upload and manage media contents - images, videos, sounds, documents'
+        'manage_theme_options' => 'Configure customization options for the active theme',
     ],
-    'mediafinder' => [
-        'label' => 'Media Finder',
-        'default_prompt' => 'Click the %s button to find a media item'
+    'theme_log' => [
+        'hint' => 'This log displays any changes made to the theme by administrators in the back-end area.',
+        'menu_label' => 'Theme log',
+        'menu_description' => 'View changes made to the active theme.',
+        'empty_link' => 'Empty theme log',
+        'empty_loading' => 'Emptying theme log...',
+        'empty_success' => 'Theme log emptied',
+        'return_link' => 'Return to theme log',
+        'id' => 'ID',
+        'id_label' => 'Log ID',
+        'created_at' => 'Date & Time',
+        'user' => 'User',
+        'type' => 'Type',
+        'type_create' => 'Create',
+        'type_update' => 'Update',
+        'type_delete' => 'Delete',
+        'theme_name' => 'Theme',
+        'theme_code' => 'Theme code',
+        'old_template' => 'Template (Old)',
+        'new_template' => 'Template (New)',
+        'template' => 'Template',
+        'diff' => 'Changes',
+        'old_value' => 'Old value',
+        'new_value' => 'New value',
+        'preview_title' => 'Template changes',
+        'template_updated' => 'Template was updated',
+        'template_created' => 'Template was created',
+        'template_deleted' => 'Template was deleted',
     ],
-    'media' => [
-        'invalid_path' => "Invalid file path specified: ':path'.",
-        'menu_label' => 'Media',
-        'upload' => 'Upload',
-        'move' => 'Move',
-        'delete' => 'Delete',
-        'add_folder' => 'Add folder',
-        'search' => 'Search',
-        'display' => 'Display',
-        'filter_everything' => 'Everything',
-        'filter_images' => 'Images',
-        'filter_video' => 'Video',
-        'filter_audio' => 'Audio',
-        'filter_documents' => 'Documents',
-        'library' => 'Library',
-        'folder_size_items' => 'item(s)',
-        'size' => 'Size',
-        'title' => 'Title',
-        'last_modified' => 'Last modified',
-        'public_url' => 'Public URL',
-        'click_here' => 'Click here',
-        'thumbnail_error' => 'Error generating thumbnail.',
-        'return_to_parent' => 'Return to the parent folder',
-        'return_to_parent_label' => 'Go up ..',
-        'nothing_selected' => 'Nothing is selected.',
-        'multiple_selected' => 'Multiple items selected.',
-        'uploading_file_num' => 'Uploading :number file(s)...',
-        'uploading_complete' => 'Upload complete',
-        'uploading_error' => 'Upload failed',
-        'type_blocked' => 'The file type used is blocked for security reasons.',
-        'order_by' => 'Order by',
-        'folder' => 'Folder',
-        'no_files_found' => 'No files found by your request.',
-        'delete_empty' => 'Please select items to delete.',
-        'delete_confirm' => 'Delete the selected item(s)?',
-        'error_renaming_file' => 'Error renaming the item.',
-        'new_folder_title' => 'New folder',
-        'folder_name' => 'Folder name',
-        'error_creating_folder' => 'Error creating folder',
-        'folder_or_file_exist' => 'A folder or file with the specified name already exists.',
-        'move_empty' => 'Please select items to move.',
-        'move_popup_title' => 'Move files or folders',
-        'move_destination' => 'Destination folder',
-        'please_select_move_dest' => 'Please select a destination folder.',
-        'move_dest_src_match' => 'Please select another destination folder.',
-        'empty_library' => 'The Media Library is empty. Upload files or create folders to get started.',
-        'insert' => 'Insert',
-        'crop_and_insert' => 'Crop & Insert',
-        'select_single_image' => 'Please select a single image.',
-        'selection_not_image' => 'The selected item is not an image.',
-        'restore' => 'Undo all changes',
-        'resize' => 'Resize...',
-        'selection_mode_normal' => 'Normal',
-        'selection_mode_fixed_ratio' => 'Fixed ratio',
-        'selection_mode_fixed_size' => 'Fixed size',
-        'height' => 'Height',
-        'width' => 'Width',
-        'selection_mode' => 'Selection mode',
-        'resize_image' => 'Resize image',
-        'image_size' => 'Image size:',
-        'selected_size' => 'Selected:'
-    ]
 ];

@@ -47,7 +47,7 @@ return [
     'alert' => [
         'confirm_button_text' => 'OK',
         'cancel_button_text' => 'Cancel',
-        'widget_remove_confirm' => 'Remove this widget?'
+        'widget_remove_confirm' => 'Remove this widget?',
     ],
     'datepicker' => [
         'previousMonth' => 'Previous Month',
@@ -56,18 +56,32 @@ return [
         'weekdays' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         'weekdaysShort' => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     ],
+    'colorpicker' => [
+        'choose' => 'Ok',
+    ],
     'filter' => [
         'group' => [
-            'all' => 'all'
+            'all' => 'all',
+        ],
+        'scopes' => [
+            'apply_button_text' => 'Apply',
+            'clear_button_text' => 'Clear',
         ],
         'dates' => [
             'all' => 'all',
             'filter_button_text' => 'Filter',
-            'reset_button_text'  => 'Reset',
+            'reset_button_text' => 'Reset',
             'date_placeholder' => 'Date',
             'after_placeholder' => 'After',
-            'before_placeholder' => 'Before'
-        ]
+            'before_placeholder' => 'Before',
+        ],
+        'numbers' => [
+            'all' => 'all',
+            'filter_button_text' => 'Filter',
+            'reset_button_text' => 'Reset',
+            'min_placeholder' => 'Min',
+            'max_placeholder' => 'Max',
+        ],
     ],
     'eventlog' => [
         'show_stacktrace' => 'Show the stacktrace',
@@ -82,7 +96,7 @@ return [
             'openWith' => 'Open with',
             'remember_choice' => 'Remember selected option for this session',
             'open' => 'Open',
-            'cancel' => 'Cancel'
-        ]
-    ]
+            'cancel' => 'Cancel',
+        ],
+    ],
 ];

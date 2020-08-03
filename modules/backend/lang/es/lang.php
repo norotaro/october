@@ -19,9 +19,6 @@ return [
             'help' => 'No tiene permisos necesarios para ver esta página.',
             'cms_link' => 'Volver al panel de administración'
         ],
-        'invalid_token' => [
-            'label' => 'Token de seguridad invalido'
-        ]
     ],
     'partial' => [
         'not_found_name' => "El parcial ':name' no se encuentra."
@@ -214,8 +211,8 @@ return [
         'resetting' => 'Restableciendo',
         'resetting_name' => 'Restableciendo :name',
         'undefined_tab' => 'Varios',
-        'field_off' => 'Off',
-        'field_on' => 'On',
+        'field_off' => 'Apagar',
+        'field_on' => 'Encender',
         'add' => 'Agregar',
         'apply' => 'Aplicar',
         'cancel' => 'Cancelar',
@@ -230,8 +227,8 @@ return [
         'preview_no_files_message' => 'Los archivos no se han subido',
         'preview_no_record_message' => 'No hay ningún registro seleccionado.',
         'select' => 'Seleccionar',
-        'select_all' => 'todos',
-        'select_none' => 'ninguno',
+        'select_all' => 'seleccionar todo',
+        'select_none' => 'no seleccionar ninguno',
         'select_placeholder' => 'por favor seleccione',
         'insert_row' => 'Agregar Fila',
         'insert_row_below' => 'Insertar fila debajo',
@@ -244,7 +241,7 @@ return [
         'find_record' => 'Buscar Registro'
     ],
     'relation' => [
-        'missing_config' => "Relación de comportamiento no tiene ninguna configuración para ':config'.",    
+        'missing_config' => "Relación de comportamiento no tiene ninguna configuración para ':config'.",
         'missing_definition' => "Relación de comportamiento no contiene una definición para ':field'.",
         'missing_model' => 'Relación de comportamiento utilizado en :class no tiene un modelo definido.',
         'invalid_action_single' => 'Esta acción no se puede realizar en una relación singular.',
@@ -279,7 +276,7 @@ return [
     'reorder' => [
         'default_title' => 'Reordenar registros',
         'no_records' => 'No existen registros disponibles para ordenar.'
-    ],  
+    ],
     'model' => [
         'name' => 'Modelo',
         'not_found' => "Modelo ':class' con el ID :id no se pudo encontrar",
@@ -394,7 +391,7 @@ return [
         'ip_address' => 'IP',
         'first_name' => 'Nombre',
         'last_name' => 'Apellido',
-        'email' => 'Email'
+        'email' => 'Correo'
     ],
     'filter' => [
         'all' => 'todo',
@@ -472,5 +469,72 @@ return [
             'windows_1251' => 'Windows-1251 (CP1251)',
             'windows_1252' => 'Windows-1252 (CP1252)'
         ]
-    ]
+    ],
+    'permissions' => [
+        'manage_media' => 'Subir y gestionar contenidos multimedia - imágenes, vídeos, sonidos y documentos'
+    ],
+    'mediafinder' => [
+        'label' => 'Buscador de multimedia',
+        'default_prompt' => 'Haga clic en el botón %s para buscar un elemento multimedia',
+    ],
+    'media' => [
+        'menu_label' => 'Medios',
+        'upload' => 'Subir',
+        'move' => 'Mover',
+        'delete' => 'Eliminar',
+        'add_folder' => 'Nueva carpeta',
+        'search' => 'Buscar',
+        'display' => 'Mostrar',
+        'filter_everything' => 'Todo',
+        'filter_images' => 'Imágenes',
+        'filter_video' => 'Vídeo',
+        'filter_audio' => 'Audio',
+        'filter_documents' => 'Documentos',
+        'library' => 'Biblioteca',
+        'size' => 'Tamaño',
+        'title' => 'Título',
+        'last_modified' => 'Última modificación',
+        'public_url' => 'URL pública',
+        'click_here' => 'Haz click aquí',
+        'thumbnail_error' => 'Error generando la miniatura.',
+        'return_to_parent' => 'Volver a la carpeta anterior',
+        'return_to_parent_label' => 'Atrás ..',
+        'nothing_selected' => 'No se ha seleccionado nada.',
+        'multiple_selected' => 'Se han seleccionado varios elementos.',
+        'uploading_file_num' => 'Subiendo :number archivo(s)...',
+        'uploading_complete' => 'Subida completada',
+        'uploading_error' => 'Error al subir',
+        'type_blocked' => 'El tipo de archivo usado ha sido bloqueado por motivos de seguridad.',
+        'order_by' => 'Ordenar por',
+        'folder' => 'Carpeta',
+        'no_files_found' => 'No se han encontrado archivos.',
+        'delete_empty' => 'Por favor, selecciona los elementos que quieres eliminar.',
+        'delete_confirm' => '¿Deseas eliminar los elementos seleccionados?',
+        'error_renaming_file' => 'Error al renombrar el elemento.',
+        'new_folder_title' => 'Nueva carpeta',
+        'folder_name' => 'Nombre de la carpeta',
+        'error_creating_folder' => 'Error al crear la carpeta',
+        'folder_or_file_exist' => 'Ya existe un archivo o carpeta con este nombre.',
+        'move_empty' => 'Por favor, selecciona los elementos que quieres mover.',
+        'move_popup_title' => 'Mover archivos o carpetas',
+        'move_destination' => 'Carpeta de destino',
+        'please_select_move_dest' => 'Por favor, selecciona una carpeta de destino.',
+        'move_dest_src_match' => 'Por favor, selecciona otra carpeta de destino.',
+        'empty_library' => 'La biblioteca de medios está vacía. Sube archivos o crea carpetas para empezar.',
+        'insert' => 'Insertar',
+        'crop_and_insert' => 'Cortar e insertar',
+        'select_single_image' => 'Por favor, selecciona sólo una imagen.',
+        'selection_not_image' => 'El elemento seleccionado no es una imagen.',
+        'restore' => 'Deshacer todos los cambios',
+        'resize' => 'Redimensionar...',
+        'selection_mode_normal' => 'Normal',
+        'selection_mode_fixed_ratio' => 'Aspecto fijo',
+        'selection_mode_fixed_size' => 'Tamaño fijo',
+        'height' => 'Alto',
+        'width' => 'Ancho',
+        'selection_mode' => 'Modo de selección',
+        'resize_image' => 'Redimensionar imagen',
+        'image_size' => 'Tamaño de la imagen:',
+        'selected_size' => 'Selección:'
+    ],
 ];

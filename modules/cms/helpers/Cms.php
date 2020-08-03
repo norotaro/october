@@ -2,6 +2,7 @@
 
 use Url;
 use Route;
+use Config;
 
 /**
  * CMS Helper
@@ -12,7 +13,7 @@ use Route;
  */
 class Cms
 {
-    protected static $actionExists = null;
+    protected static $actionExists;
 
     /**
      * Returns a URL in context of the Frontend
@@ -32,8 +33,16 @@ class Cms
         if (self::$actionExists) {
             return Url::action($routeAction, ['slug' => $path]);
         }
-        else {
-            return Url::to($path);
+
+        return Url::to($path);
+    }
+
+    public static function safeModeEnabled()
+    {
+        $safeMode = Config::get('cms.enableSafeMode', null);
+        if ($safeMode === null) {
+            $safeMode = !Config::get('app.debug', false);
         }
+        return $safeMode;
     }
 }

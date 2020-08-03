@@ -1,12 +1,9 @@
 <?php namespace Backend\FormWidgets;
 
 use Db;
-use Lang;
 use Backend\Classes\FormField;
 use Backend\Classes\FormWidgetBase;
-use ApplicationException;
-use SystemException;
-use Illuminate\Database\Eloquent\Relations\Relation as RelationBase;
+use October\Rain\Database\Relations\Relation as RelationBase;
 
 /**
  * Form Relationship
@@ -29,11 +26,6 @@ class Relation extends FormWidgetBase
     public $nameFrom = 'name';
 
     /**
-     * @var string Model column to use for the description reference
-     */
-    public $descriptionFrom = 'description';
-
-    /**
      * @var string Custom SQL column selection to use for the name reference
      */
     public $sqlSelect;
@@ -43,12 +35,22 @@ class Relation extends FormWidgetBase
      */
     public $emptyOption;
 
+    /**
+     * @var string Use a custom scope method for the list query.
+     */
+    public $scope;
+
+    /**
+     * @var string Define the order of the list query.
+     */
+    public $order;
+
     //
     // Object properties
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'relation';
 
@@ -58,14 +60,15 @@ class Relation extends FormWidgetBase
     public $renderFormField;
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function init()
     {
         $this->fillFromConfig([
             'nameFrom',
-            'descriptionFrom',
             'emptyOption',
+            'scope',
+            'order',
         ]);
 
         if (isset($this->config->select)) {
@@ -74,7 +77,7 @@ class Relation extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function render()
     {
@@ -112,6 +115,12 @@ class Relation extends FormWidgetBase
                 $field->type = 'dropdown';
             }
 
+            // Order query by the configured option.
+            if ($this->order) {
+                // Using "raw" to allow authors to use a string to define the order clause.
+                $query->orderByRaw($this->order);
+            }
+
             // It is safe to assume that if the model and related model are of
             // the exact same class, then it cannot be related to itself
             if ($model->exists && (get_class($model) == get_class($relationModel))) {
@@ -121,6 +130,10 @@ class Relation extends FormWidgetBase
             // Even though "no constraints" is applied, belongsToMany constrains the query
             // by joining its pivot table. Remove all joins from the query.
             $query->getQuery()->getQuery()->joins = [];
+
+            if ($scopeMethod = $this->scope) {
+                $query->$scopeMethod($model);
+            }
 
             // Determine if the model uses a tree trait
             $treeTraits = ['October\Rain\Database\Traits\NestedTree', 'October\Rain\Database\Traits\SimpleTree'];
@@ -154,7 +167,7 @@ class Relation extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getSaveValue($value)
     {

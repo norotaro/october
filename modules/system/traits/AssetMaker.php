@@ -2,8 +2,11 @@
 
 use Url;
 use Html;
+use File;
+use Event;
 use System\Models\Parameter;
 use System\Models\PluginVersion;
+use System\Classes\CombineAssets;
 
 /**
  * Asset Maker Trait
@@ -14,7 +17,6 @@ use System\Models\PluginVersion;
  */
 trait AssetMaker
 {
-
     /**
      * @var array Collection of assets to display in the layout.
      */
@@ -37,7 +39,7 @@ trait AssetMaker
     }
 
     /**
-     * Outputs <link> and <script> tags to load assets previously added with addJs and addCss method calls
+     * Outputs `<link>` and `<script>` tags to load assets previously added with addJs and addCss method calls
      * @param string $type Return an asset collection of a given type (css, rss, js) or null for all.
      * @return string
      */
@@ -53,7 +55,6 @@ trait AssetMaker
 
         if ($type == null || $type == 'css') {
             foreach ($this->assets['css'] as $asset) {
-
                 /*
                  * Prevent duplicates
                  */
@@ -102,7 +103,7 @@ trait AssetMaker
     }
 
     /**
-     * Adds JavaScript asset to the asset list. Call $this->makeAssets() in a view 
+     * Adds JavaScript asset to the asset list. Call $this->makeAssets() in a view
      * to output corresponding markup.
      * @param string $name Specifies a path (URL) to the script.
      * @param array $attributes Adds extra HTML attributes to the asset link.
@@ -110,6 +111,10 @@ trait AssetMaker
      */
     public function addJs($name, $attributes = [])
     {
+        if (is_array($name)) {
+            $name = $this->combineAssets($name, $this->getLocalPath($this->assetPath));
+        }
+
         $jsPath = $this->getAssetPath($name);
 
         if (isset($this->controller)) {
@@ -122,9 +127,7 @@ trait AssetMaker
 
         $jsPath = $this->getAssetScheme($jsPath);
 
-        if (!in_array($jsPath, $this->assets['js'])) {
-            $this->assets['js'][] = ['path' => $jsPath, 'attributes' => $attributes];
-        }
+        $this->addAsset('js', $jsPath, $attributes);
     }
 
     /**
@@ -136,6 +139,10 @@ trait AssetMaker
      */
     public function addCss($name, $attributes = [])
     {
+        if (is_array($name)) {
+            $name = $this->combineAssets($name, $this->getLocalPath($this->assetPath));
+        }
+
         $cssPath = $this->getAssetPath($name);
 
         if (isset($this->controller)) {
@@ -148,9 +155,7 @@ trait AssetMaker
 
         $cssPath = $this->getAssetScheme($cssPath);
 
-        if (!in_array($cssPath, $this->assets['css'])) {
-            $this->assets['css'][] = ['path' => $cssPath, 'attributes' => $attributes];
-        }
+        $this->addAsset('css', $cssPath, $attributes);
     }
 
     /**
@@ -174,9 +179,76 @@ trait AssetMaker
 
         $rssPath = $this->getAssetScheme($rssPath);
 
-        if (!in_array($rssPath, $this->assets['rss'])) {
-            $this->assets['rss'][] = ['path' => $rssPath, 'attributes' => $attributes];
+        $this->addAsset('rss', $rssPath, $attributes);
+    }
+
+    /**
+     * Adds the provided asset to the internal asset collections
+     *
+     * @param string $type The type of the asset: 'js' || 'css' || 'rss'
+     * @param string $path The path to the asset
+     * @param array $attributes The attributes for the asset
+     */
+    protected function addAsset(string $type, string $path, array $attributes)
+    {
+        if (!in_array($path, $this->assets[$type])) {
+            /**
+             * @event system.assets.beforeAddAsset
+             * Provides an opportunity to inspect or modify an asset.
+             *
+             * The parameters provided are:
+             * string `$type`: The type of the asset being added
+             * string `$path`: The path to the asset being added
+             * array `$attributes`: The array of attributes for the asset being added.
+             *
+             * All the parameters are provided by reference for modification.
+             * This event is also a halting event, so returning false will prevent the
+             * current asset from being added. Note that duplicates are filtered out
+             * before the event is fired.
+             *
+             * Example usage:
+             *
+             *     Event::listen('system.assets.beforeAddAsset', function (string $type, string $path, array $attributes) {
+             *         if (in_array($path, $blockedAssets)) {
+             *             return false;
+             *         }
+             *     });
+             *
+             * Or
+             *
+             *     $this->bindEvent('assets.beforeAddAsset', function (string $type, string $path, array $attributes) {
+             *         $attributes['special_cdn_flag'] = false;
+             *     });
+             *
+             */
+            if (
+                // Fire local event if exists
+                (
+                    method_exists($this, 'fireEvent') &&
+                    ($this->fireEvent('assets.beforeAddAsset', [&$type, &$path, &$attributes], true) !== false)
+                ) &&
+                // Fire global event
+                (Event::fire('system.assets.beforeAddAsset', [&$type, &$path, &$attributes], true) !== false)
+            ) {
+                $this->assets[$type][] = ['path' => $path, 'attributes' => $attributes];
+            }
         }
+    }
+
+    /**
+     * Run the provided assets through the Asset Combiner
+     * @param array $assets Collection of assets
+     * @param string $localPath Prefix all assets with this path (optional)
+     * @return string
+     */
+    public function combineAssets(array $assets, $localPath = '')
+    {
+        // Short circuit if no assets actually provided
+        if (empty($assets)) {
+            return '';
+        }
+        $assetPath = !empty($localPath) ? $localPath : $this->assetPath;
+        return Url::to(CombineAssets::combine($assets, $assetPath));
     }
 
     /**
@@ -281,10 +353,8 @@ trait AssetMaker
     protected function removeDuplicates()
     {
         foreach ($this->assets as $type => &$collection) {
-
             $pathCache = [];
             foreach ($collection as $key => $asset) {
-
                 if (!$path = array_get($asset, 'path')) {
                     continue;
                 }
@@ -296,7 +366,15 @@ trait AssetMaker
 
                 $pathCache[$path] = true;
             }
-
         }
+    }
+
+    protected function getLocalPath(string $relativePath)
+    {
+        $relativePath = File::symbolizePath($relativePath);
+        if (!starts_with($relativePath, [base_path()])) {
+            $relativePath = base_path($relativePath);
+        }
+        return $relativePath;
     }
 }

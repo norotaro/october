@@ -13,18 +13,31 @@ class MailSetting extends Model
 {
     use \October\Rain\Database\Traits\Validation;
 
-    public $implement = ['System.Behaviors.SettingsModel'];
+    const MODE_LOG       = 'log';
+    const MODE_MAIL      = 'mail';
+    const MODE_SENDMAIL  = 'sendmail';
+    const MODE_SMTP      = 'smtp';
+    const MODE_MAILGUN   = 'mailgun';
+    const MODE_MANDRILL  = 'mandrill';
+    const MODE_SES       = 'ses';
+    const MODE_SPARKPOST = 'sparkpost';
 
+    /**
+     * @var array Behaviors implemented by this model.
+     */
+    public $implement = [
+        \System\Behaviors\SettingsModel::class
+    ];
+
+    /**
+     * @var string Unique code
+     */
     public $settingsCode = 'system_mail_settings';
-    public $settingsFields = 'fields.yaml';
 
-    const MODE_LOG      = 'log';
-    const MODE_MAIL     = 'mail';
-    const MODE_SENDMAIL = 'sendmail';
-    const MODE_SMTP     = 'smtp';
-    const MODE_MAILGUN  = 'mailgun';
-    const MODE_MANDRILL = 'mandrill';
-    const MODE_SES      = 'ses';
+    /**
+     * @var mixed Settings form field defitions
+     */
+    public $settingsFields = 'fields.yaml';
 
     /*
      * Validation rules
@@ -34,6 +47,11 @@ class MailSetting extends Model
         'sender_email' => 'required|email'
     ];
 
+    /**
+     * Initialize the seed data for this model. This only executes when the
+     * model is first created or reset to default.
+     * @return void
+     */
     public function initSettingsData()
     {
         $config = App::make('config');
@@ -59,6 +77,7 @@ class MailSetting extends Model
             static::MODE_MAILGUN  => 'system::lang.mail.mailgun',
             static::MODE_MANDRILL => 'system::lang.mail.mandrill',
             static::MODE_SES      => 'system::lang.mail.ses',
+            static::MODE_SPARKPOST => 'system::lang.mail.sparkpost',
         ];
     }
 
@@ -71,7 +90,6 @@ class MailSetting extends Model
         $config->set('mail.from.address', $settings->sender_email);
 
         switch ($settings->send_mode) {
-
             case self::MODE_SMTP:
                 $config->set('mail.host', $settings->smtp_address);
                 $config->set('mail.port', $settings->smtp_port);
@@ -109,10 +127,12 @@ class MailSetting extends Model
                 $config->set('services.ses.secret', $settings->ses_secret);
                 $config->set('services.ses.region', $settings->ses_region);
                 break;
+
+            case self::MODE_SPARKPOST:
+                $config->set('services.sparkpost.secret', $settings->sparkpost_secret);
+                break;
         }
-
     }
-
 
     /**
      * @return array smtp_encryption options values

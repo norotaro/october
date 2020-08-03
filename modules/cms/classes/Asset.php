@@ -3,7 +3,7 @@
 use File;
 use Lang;
 use Config;
-use Cms\Classes\Theme;
+use Request;
 use Cms\Helpers\File as FileHelper;
 use October\Rain\Extension\Extendable;
 use ApplicationException;
@@ -35,7 +35,7 @@ class Asset extends Extendable
     /**
      * @var string Specifies the file name, the CMS object was loaded from.
      */
-    protected $originalFileName = null;
+    protected $originalFileName;
 
     /**
      * @var string Last modified time.
@@ -93,7 +93,7 @@ class Asset extends Extendable
 
     /**
      * Prepares the theme datasource for the model.
-     * @param \Cms\Classes\Theme $theme Specifies a parent theme.
+     * @param \Cms\Classes\Theme|string $theme Specifies a parent theme.
      * @return $this
      */
     public static function inTheme($theme)
@@ -209,6 +209,23 @@ class Asset extends Extendable
         $this->exists = true;
     }
 
+    public function delete()
+    {
+        $fileName = Request::input('fileName');
+        $fullPath = $this->getFilePath($fileName);
+
+        $this->validateFileName($fileName);
+
+        if (File::exists($fullPath)) {
+            if (!@File::delete($fullPath)) {
+                throw new ApplicationException(Lang::get(
+                    'cms::lang.asset.error_deleting_file',
+                    ['name' => $fileName]
+                ));
+            }
+        }
+    }
+
     /**
      * Validate the supplied filename, extension and path.
      * @param string $fileName
@@ -238,6 +255,14 @@ class Asset extends Extendable
                 ])
             ]);
         }
+
+        if (!FileHelper::validatePath($fileName, null)) {
+            throw new ValidationException(['fileName' =>
+                Lang::get('cms::lang.cms_object.invalid_file', [
+                    'name' => $fileName
+                ])
+            ]);
+        }
     }
 
     /**
@@ -260,7 +285,14 @@ class Asset extends Extendable
             $fileName = $this->fileName;
         }
 
-        return $this->theme->getPath().'/'.$this->dirName.'/'.$fileName;
+        // Limit paths to those under the assets directory
+        $directory = $this->theme->getPath() . '/' . $this->dirName . '/';
+        $path = realpath($directory . $fileName);
+        if (!starts_with($path, $directory)) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**

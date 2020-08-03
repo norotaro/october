@@ -4,7 +4,6 @@ use Str;
 use File;
 use Input;
 use Request;
-use Response;
 use Cms\Classes\Theme;
 use Backend\Classes\WidgetBase;
 
@@ -20,14 +19,13 @@ class TemplateList extends WidgetBase
     const SORTING_FILENAME = 'fileName';
 
     use \Backend\Traits\SelectableWidget;
+    use \Backend\Traits\CollapsableWidget;
 
     protected $searchTerm = false;
 
     protected $dataSource;
 
     protected $theme;
-
-    protected $groupStatusCache = false;
 
     /**
      * @var string object property to use as a title.
@@ -64,7 +62,7 @@ class TemplateList extends WidgetBase
     /**
      * @var string Extra CSS class name to apply to the control.
      */
-    public $controlClass = null;
+    public $controlClass;
 
     /**
      * @var string A list of file name patterns to suppress / hide.
@@ -72,7 +70,7 @@ class TemplateList extends WidgetBase
     public $ignoreDirectories = [];
 
     /**
-     * @var boolean Defines sorting properties. 
+     * @var boolean Defines sorting properties.
      * The sorting feature is disabled if there are no sorting properties defined.
      */
     public $sortingProperties = [];
@@ -87,6 +85,7 @@ class TemplateList extends WidgetBase
         $this->dataSource = $dataSource;
         $this->theme = Theme::getEditTheme();
         $this->selectionInputName = 'template';
+        $this->collapseSessionKey = $this->getThemeSessionKey('groups');
 
         parent::__construct($controller, []);
 
@@ -131,11 +130,6 @@ class TemplateList extends WidgetBase
         $this->extendSelection();
 
         return $this->updateList();
-    }
-
-    public function onGroupStatusUpdate()
-    {
-        $this->setGroupStatus(Input::get('group'), Input::get('status'));
     }
 
     public function onUpdate()
@@ -233,7 +227,7 @@ class TemplateList extends WidgetBase
             }
         }
 
-        // Sort folders by name regardless of the 
+        // Sort folders by name regardless of the
         // selected sorting options.
         ksort($foundGroups);
 
@@ -261,7 +255,7 @@ class TemplateList extends WidgetBase
 
         $ignoreCache = [];
 
-        $items = array_filter($items, function($item) use (&$ignoreCache) {
+        $items = array_filter($items, function ($item) use (&$ignoreCache) {
             $fileName = $item->getBaseFileName();
             $dirName = dirname($fileName);
 
@@ -300,14 +294,32 @@ class TemplateList extends WidgetBase
             'title'        => $this->getItemTitle($item),
             'fileName'     => $item->getFileName(),
             'description'  => $description,
-            'descriptions' => $descriptions
+            'descriptions' => $descriptions,
+            'dragValue'    => $this->getItemDragValue($item)
         ];
 
-        foreach ($this->sortingProperties as $property=>$name) {
+        foreach ($this->sortingProperties as $property => $name) {
             $result[$property] = $item->$property;
         }
 
         return (object) $result;
+    }
+
+    protected function getItemDragValue($item)
+    {
+        if ($item instanceof \Cms\Classes\Partial) {
+            return "{% partial '".$item->getBaseFileName()."' %}";
+        }
+
+        if ($item instanceof \Cms\Classes\Content) {
+            return "{% content '".$item->getBaseFileName()."' %}";
+        }
+
+        if ($item instanceof \Cms\Classes\Page) {
+            return "{{ '".$item->getBaseFileName()."'|page }}";
+        }
+
+        return '';
     }
 
     protected function getItemTitle($item)
@@ -359,10 +371,8 @@ class TemplateList extends WidgetBase
     {
         $operator = $exact ? 'is' : 'contains';
 
-        if (strlen($item->title)) {
-            if (Str::$operator(Str::lower($item->title), $word)) {
-                return true;
-            }
+        if (strlen($item->title) && Str::$operator(Str::lower($item->title), $word)) {
+            return true;
         }
 
         if (Str::$operator(Str::lower($item->fileName), $word)) {
@@ -382,41 +392,9 @@ class TemplateList extends WidgetBase
         return false;
     }
 
-    protected function getGroupStatus($group)
-    {
-        $statuses = $this->getGroupStatuses();
-        if (array_key_exists($group, $statuses)) {
-            return $statuses[$group];
-        }
-
-        return false;
-    }
-
     protected function getThemeSessionKey($prefix)
     {
         return $prefix.$this->theme->getDirName();
-    }
-
-    protected function getGroupStatuses()
-    {
-        if ($this->groupStatusCache !== false) {
-            return $this->groupStatusCache;
-        }
-
-        $groups = $this->getSession($this->getThemeSessionKey('groups'), []);
-        if (!is_array($groups)) {
-            return $this->groupStatusCache = [];
-        }
-
-        return $this->groupStatusCache = $groups;
-    }
-
-    protected function setGroupStatus($group, $status)
-    {
-        $statuses = $this->getGroupStatuses();
-        $statuses[$group] = $status;
-        $this->groupStatusCache = $statuses;
-        $this->putSession($this->getThemeSessionKey('groups'), $statuses);
     }
 
     protected function getSortingProperty()

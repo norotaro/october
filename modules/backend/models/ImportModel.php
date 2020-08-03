@@ -26,7 +26,7 @@ abstract class ImportModel extends Model
      * Relations
      */
     public $attachOne = [
-        'import_file' => ['System\Models\File']
+        'import_file' => [\System\Models\File::class, 'public' => false],
     ];
 
     /**
@@ -109,7 +109,7 @@ abstract class ImportModel extends Model
         $reader = CsvReader::createFromPath($filePath, 'r');
 
         // Filter out empty rows
-        $reader->addFilter(function(array $row) {
+        $reader->addFilter(function (array $row) {
             return count($row) > 1 || reset($row) !== null;
         });
 
@@ -142,7 +142,7 @@ abstract class ImportModel extends Model
         }
 
         $result = [];
-        $contents = $reader->fetchAll();
+        $contents = $reader->fetch();
         foreach ($contents as $row) {
             $result[] = $this->processImportRow($row, $matches);
         }
@@ -174,7 +174,9 @@ abstract class ImportModel extends Model
      */
     protected function decodeArrayValue($value, $delimeter = '|')
     {
-        if (strpos($value, $delimeter) === false) return [$value];
+        if (strpos($value, $delimeter) === false) {
+            return [$value];
+        }
 
         $data = preg_split('~(?<!\\\)' . preg_quote($delimeter, '~') . '~', $value);
         $newData = [];
@@ -229,11 +231,12 @@ abstract class ImportModel extends Model
             'iso-8859-13',
             'iso-8859-14',
             'iso-8859-15',
+            'Windows-1250',
             'Windows-1251',
             'Windows-1252'
         ];
 
-        $translated = array_map(function($option){
+        $translated = array_map(function ($option) {
             return Lang::get('backend::lang.import_export.encodings.'.Str::slug($option, '_'));
         }, $options);
 

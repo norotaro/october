@@ -2,11 +2,14 @@
 
 use App;
 use File;
-use Event;
 use Lang;
+use Event;
+use Config;
 use Request;
-use Backend\Classes\FormWidgetBase;
+use Backend;
+use BackendAuth;
 use Backend\Models\EditorSetting;
+use Backend\Classes\FormWidgetBase;
 
 /**
  * Rich Editor
@@ -17,6 +20,8 @@ use Backend\Models\EditorSetting;
  */
 class RichEditor extends FormWidgetBase
 {
+    use \Backend\Traits\UploadableWidget;
+
     //
     // Configurable properties
     //
@@ -29,30 +34,45 @@ class RichEditor extends FormWidgetBase
     /**
      * @var boolean Determines whether content has HEAD and HTML tags.
      */
-    public $toolbarButtons = null;
+    public $toolbarButtons;
+
+    /**
+     * @var boolean If true, the editor is set to read-only mode
+     */
+    public $readOnly = false;
+
+    /**
+     * @var string|null Path in the Media Library where uploaded files should be stored. If null it will be pulled from Request::input('path');
+     */
+    public $uploadPath = '/uploaded-files';
 
     //
     // Object properties
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'richeditor';
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function init()
     {
+        if ($this->formField->disabled) {
+            $this->readOnly = true;
+        }
+
         $this->fillFromConfig([
             'fullPage',
+            'readOnly',
             'toolbarButtons',
         ]);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function render()
     {
@@ -70,14 +90,18 @@ class RichEditor extends FormWidgetBase
         $this->vars['fullPage'] = $this->fullPage;
         $this->vars['stretch'] = $this->formField->stretch;
         $this->vars['size'] = $this->formField->size;
+        $this->vars['readOnly'] = $this->readOnly;
         $this->vars['name'] = $this->getFieldName();
         $this->vars['value'] = $this->getLoadValue();
         $this->vars['toolbarButtons'] = $this->evalToolbarButtons();
+        $this->vars['useMediaManager'] = BackendAuth::getUser()->hasAccess('media.manage_media');
 
+        $this->vars['globalToolbarButtons'] = EditorSetting::getConfigured('html_toolbar_buttons');
         $this->vars['allowEmptyTags'] = EditorSetting::getConfigured('html_allow_empty_tags');
         $this->vars['allowTags'] = EditorSetting::getConfigured('html_allow_tags');
         $this->vars['noWrapTags'] = EditorSetting::getConfigured('html_no_wrap_tags');
         $this->vars['removeTags'] = EditorSetting::getConfigured('html_remove_tags');
+        $this->vars['lineBreakerTags'] = EditorSetting::getConfigured('html_line_breaker_tags');
 
         $this->vars['imageStyles'] = EditorSetting::getConfiguredStyles('html_style_image');
         $this->vars['linkStyles'] = EditorSetting::getConfiguredStyles('html_style_link');
@@ -95,7 +119,7 @@ class RichEditor extends FormWidgetBase
         $buttons = $this->toolbarButtons;
 
         if (is_string($buttons)) {
-            $buttons = array_map(function($button) {
+            $buttons = array_map(function ($button) {
                 return strlen($button) ? $button : '|';
             }, explode('|', $buttons));
         }
@@ -110,12 +134,22 @@ class RichEditor extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected function loadAssets()
     {
         $this->addCss('css/richeditor.css', 'core');
         $this->addJs('js/build-min.js', 'core');
+
+        if (Config::get('develop.decompileBackendAssets', false)) {
+            $scripts = Backend::decompileAsset($this->getAssetPath('js/build-plugins.js'));
+            foreach ($scripts as $script) {
+                $this->addJs($script, 'core');
+            }
+        } else {
+            $this->addJs('js/build-plugins-min.js', 'core');
+        }
+
         $this->addJs('/modules/backend/formwidgets/codeeditor/assets/js/build-min.js', 'core');
 
         if ($lang = $this->getValidEditorLang()) {
@@ -199,16 +233,23 @@ class RichEditor extends FormWidgetBase
 
         $links[] = ['name' => Lang::get('backend::lang.pagelist.select_page'), 'url' => false];
 
-        $iterator = function($links, $level = 0) use (&$iterator) {
+        $iterator = function ($links, $level = 0) use (&$iterator) {
             $result = [];
-            foreach ($links as $linkUrl => $link) {
 
+            foreach ($links as $linkUrl => $link) {
                 /*
                  * Remove scheme and host from URL
                  */
                 $baseUrl = Request::getSchemeAndHttpHost();
                 if (strpos($linkUrl, $baseUrl) === 0) {
                     $linkUrl = substr($linkUrl, strlen($baseUrl));
+                }
+
+                /*
+                 * Root page fallback.
+                 */
+                if (strlen($linkUrl) === 0) {
+                    $linkUrl = '/';
                 }
 
                 $linkName = str_repeat('&nbsp;', $level * 4);

@@ -20,6 +20,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Name
+    |--------------------------------------------------------------------------
+    |
+    | This value is the name of your application. This value is used when the
+    | framework needs to place the application's name in a notification or
+    | any other location as required by the application or its packages.
+    */
+
+    'name' => 'October CMS',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |
@@ -40,6 +52,14 @@ return [
     | will be used by the PHP date and date-time functions. We have gone
     | ahead and set this to a sensible default for you out of the box.
     |
+    |
+    | -------- STOP! --------
+    | Before you change this value, consider carefully if that is actually
+    | what you want to do. It is HIGHLY recommended that this is always set
+    | to UTC (as your server & DB timezone should be as well) and instead you
+    | use cms.backendTimezone to set the default timezone used in the backend
+    | to display dates & times.
+    |
     */
 
     'timezone' => 'UTC',
@@ -52,6 +72,12 @@ return [
     | The application locale determines the default locale that will be used
     | by the translation service provider. You are free to set this value
     | to any of the locales which will be supported by the application.
+    |
+    | WARNING: Avoid setting this to a locale that is not supported by the
+    | backend yet, as this can cause issues in the backend.
+    |
+    | Currently supported backend locales are listed in
+    | Backend\Models\Preference->getLocaleOptions())
     |
     */
 

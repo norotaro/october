@@ -5,7 +5,6 @@ use File;
 use Cache;
 use Config;
 use Event;
-use SystemException;
 use October\Rain\Router\Router as RainRouter;
 use October\Rain\Router\Helper as RouterHelper;
 
@@ -21,11 +20,11 @@ use October\Rain\Router\Helper as RouterHelper;
  * <pre>/blog/:post_id?/comments - although the :post_id parameter is marked as optional,
  * it will be processed as required.</pre>
  * Optional parameters can have default values which are used as fallback values in case if the real
- * parameter value is not presented in the URL. Default values cannot contain the pipe symbols and question marks. 
+ * parameter value is not presented in the URL. Default values cannot contain the pipe symbols and question marks.
  * Specify the default value after the question mark:
  * <pre>/blog/category/:category_id?10 - The category_id parameter would be 10 for this URL: /blog/category</pre>
  * You can also add regular expression validation to parameters. To add a validation expression
- * add the pipe symbol after the parameter name (or the question mark) and specify the expression. 
+ * add the pipe symbol after the parameter name (or the question mark) and specify the expression.
  * The forward slash symbol is not allowed in the expressions. Examples:
  * <pre>/blog/:post_id|^[0-9]+$/comments - this will match /blog/post/10/comments
  * /blog/:post_id|^[0-9]+$ - this will match /blog/post/3
@@ -80,6 +79,17 @@ class Router
         $this->url = $url;
         $url = RouterHelper::normalizeUrl($url);
 
+        /**
+         * @event cms.router.beforeRoute
+         * Fires before the CMS Router handles a route
+         *
+         * Example usage:
+         *
+         *     Event::listen('cms.router.beforeRoute', function ((string) $url, (\Cms\Classes\Router) $thisRouterInstance) {
+         *         return \Cms\Classes\Page::loadCached('trick-theme-code', 'page-file-name');
+         *     });
+         *
+         */
         $apiResult = Event::fire('cms.router.beforeRoute', [$url, $this], true);
         if ($apiResult !== null) {
             return $apiResult;
@@ -209,7 +219,7 @@ class Router
     /**
      * Loads the URL map - a list of page file names and corresponding URL patterns.
      * The URL map can is cached. The clearUrlMap() method resets the cache. By default
-     * the map is updated every time when a page is saved in the back-end, or 
+     * the map is updated every time when a page is saved in the back-end, or
      * when the interval defined with the cms.urlCacheTtl expires.
      * @return boolean Returns true if the URL map was loaded from the cache. Otherwise returns false.
      */
@@ -290,15 +300,14 @@ class Router
 
     /**
      * Returns a routing parameter.
-     * @return array
+     * @param  string $name
+     * @param  string|null $default
+     * @return string|null
      */
-    public function getParameter($name, $default = null)
+    public function getParameter(string $name, string $default = null)
     {
-        if (isset($this->parameters[$name]) && !empty($this->parameters[$name])) {
-            return $this->parameters[$name];
-        }
-
-        return $default;
+        $value = $this->parameters[$name] ?? '';
+        return $value !== '' ? $value : $default;
     }
 
     /**
@@ -308,7 +317,7 @@ class Router
      */
     protected function getCacheKey($keyName)
     {
-        return crc32($this->theme->getPath()).$keyName;
+        return md5($this->theme->getPath()).$keyName.Lang::getLocale();
     }
 
     /**
@@ -331,14 +340,12 @@ class Router
         $key = $this->getUrlListCacheKey();
         $urlList = Cache::get($key, false);
 
-        if (
-            $urlList &&
-            ($urlList = @unserialize(@base64_decode($urlList))) &&
-            is_array($urlList)
+        if ($urlList
+            && ($urlList = @unserialize(@base64_decode($urlList)))
+            && is_array($urlList)
+            && array_key_exists($url, $urlList)
         ) {
-            if (array_key_exists($url, $urlList)) {
-                return $urlList[$url];
-            }
+            return $urlList[$url];
         }
 
         return null;

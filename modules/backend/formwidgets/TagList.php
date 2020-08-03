@@ -1,6 +1,7 @@
 <?php namespace Backend\FormWidgets;
 
 use Backend\Classes\FormWidgetBase;
+use October\Rain\Database\Relations\Relation as RelationBase;
 
 /**
  * Tag List Form Widget
@@ -30,7 +31,7 @@ class TagList extends FormWidgetBase
     /**
      * @var mixed Predefined options settings. Set to true to get from model.
      */
-    public $options = null;
+    public $options;
 
     /**
      * @var string Mode for the return value. Values: string, array, relation.
@@ -42,17 +43,27 @@ class TagList extends FormWidgetBase
      */
     public $nameFrom = 'name';
 
+    /**
+     * @var bool Use the key instead of value for saving and reading data.
+     */
+    public $useKey = false;
+
+    /**
+     * @var string Placeholder for empty TagList widget
+     */
+    public $placeholder = '';
+
     //
     // Object properties
     //
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $defaultAlias = 'taglist';
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function init()
     {
@@ -62,15 +73,18 @@ class TagList extends FormWidgetBase
             'options',
             'mode',
             'nameFrom',
+            'useKey',
+            'placeholder'
         ]);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function render()
     {
         $this->prepareVars();
+
         return $this->makePartial('taglist');
     }
 
@@ -79,6 +93,8 @@ class TagList extends FormWidgetBase
      */
     public function prepareVars()
     {
+        $this->vars['placeholder'] = $this->placeholder;
+        $this->vars['useKey'] = $this->useKey;
         $this->vars['field'] = $this->formField;
         $this->vars['fieldOptions'] = $this->getFieldOptions();
         $this->vars['selectedValues'] = $this->getLoadValue();
@@ -86,7 +102,7 @@ class TagList extends FormWidgetBase
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getSaveValue($value)
     {
@@ -121,15 +137,17 @@ class TagList extends FormWidgetBase
         $newTags = $this->customTags ? array_diff($names, $existingTags) : [];
 
         foreach ($newTags as $newTag) {
-            $newModel = $relationModel::create([$this->nameFrom => $newTag]);
-            $existingTags[$newModel->id] = $newTag;
+            $newModel = new $relationModel;
+            $newModel->{$this->nameFrom} = $newTag;
+            $newModel->save();
+            $existingTags[$newModel->getKey()] = $newTag;
         }
 
         return array_keys($existingTags);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getLoadValue()
     {
@@ -153,7 +171,15 @@ class TagList extends FormWidgetBase
         $options = $this->formField->options();
 
         if (!$options && $this->mode === static::MODE_RELATION) {
-            $options = $this->getRelationModel()->lists($this->nameFrom);
+            $options = RelationBase::noConstraints(function () {
+                $query = $this->getRelationObject()->newQuery();
+
+                // Even though "no constraints" is applied, belongsToMany constrains the query
+                // by joining its pivot table. Remove all joins from the query.
+                $query->getQuery()->getQuery()->joins = [];
+
+                return $query->lists($this->nameFrom);
+            });
         }
 
         return $options;
@@ -183,9 +209,10 @@ class TagList extends FormWidgetBase
     protected function getSeparatorCharacter()
     {
         switch (strtolower($this->separator)) {
-            case 'comma': return ',';
-            case 'space': return ' ';
+            case 'comma':
+                return ',';
+            case 'space':
+                return ' ';
         }
     }
-
 }

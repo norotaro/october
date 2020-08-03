@@ -1,26 +1,37 @@
 <?php namespace System\Console;
 
+use App;
 use Lang;
 use File;
 use Config;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use System\Classes\UpdateManager;
 use System\Classes\CombineAssets;
+use Exception;
+use System\Models\Parameter;
 
 /**
- * Utility command
+ * Console command for other utility commands.
  *
- * Supported commands:
+ * This provides functionality that doesn't quite deserve its own dedicated
+ * console class. It is used mostly developer tools and maintenance tasks.
  *
- *   - purge thumbs: Deletes all thumbnail files in the uploads directory.
- *   - git pull: Perform "git pull" on all plugins and themes.
- *   - compile assets: Compile registered Language, LESS and JS files.
- *   - compile js: Compile registered JS files only.
- *   - compile less: Compile registered LESS files only.
- *   - compile scss: Compile registered SCSS files only.
- *   - compile lang: Compile registered Language files only.
+ * Currently supported commands:
  *
+ * - purge thumbs: Deletes all thumbnail files in the uploads directory.
+ * - git pull: Perform "git pull" on all plugins and themes.
+ * - compile assets: Compile registered Language, LESS and JS files.
+ * - compile js: Compile registered JS files only.
+ * - compile less: Compile registered LESS files only.
+ * - compile scss: Compile registered SCSS files only.
+ * - compile lang: Compile registered Language files only.
+ * - set build: Pull the latest stable build number from the update gateway and set it as the current build number.
+ * - set project --projectId=<id>: Set the projectId for this october instance.
+ *
+ * @package october\system
+ * @author Alexey Bobkov, Samuel Georges
  */
 class OctoberUtil extends Command
 {
@@ -38,23 +49,32 @@ class OctoberUtil extends Command
     protected $description = 'Utility commands for October';
 
     /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      */
-    public function fire()
+    public function handle()
     {
         $command = implode(' ', (array) $this->argument('name'));
         $method = 'util'.studly_case($command);
 
+        $methods = preg_grep('/^util/', get_class_methods(get_called_class()));
+        $list = array_map(function ($item) {
+            return "october:".snake_case($item, " ");
+        }, $methods);
+
+        if (!$this->argument('name')) {
+            $message = 'There are no commands defined in the "util" namespace.';
+            if (1 == count($list)) {
+                $message .= "\n\nDid you mean this?\n    ";
+            } else {
+                $message .= "\n\nDid you mean one of these?\n    ";
+            }
+
+            $message .= implode("\n    ", $list);
+            throw new \InvalidArgumentException($message);
+        }
+
         if (!method_exists($this, $method)) {
-            $this->error(sprintf('<error>Utility command "%s" does not exist!</error>', $command));
+            $this->error(sprintf('Utility command "%s" does not exist!', $command));
             return;
         }
 
@@ -68,7 +88,7 @@ class OctoberUtil extends Command
     protected function getArguments()
     {
         return [
-            ['name', InputArgument::IS_ARRAY, 'A utility command to perform.'],
+            ['name', InputArgument::IS_ARRAY, 'The utility command to perform, For more info "http://octobercms.com/docs/console/commands#october-util-command".'],
         ];
     }
 
@@ -80,12 +100,42 @@ class OctoberUtil extends Command
         return [
             ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when in production.'],
             ['debug', null, InputOption::VALUE_NONE, 'Run the operation in debug / development mode.'],
+            ['projectId', null, InputOption::VALUE_REQUIRED, 'Specify a projectId for set project'],
         ];
     }
 
     //
     // Utilties
     //
+
+    protected function utilSetBuild()
+    {
+        $this->comment('-');
+
+        /*
+         * Skip setting the build number if no database is detected to set it within
+         */
+        if (!App::hasDatabase()) {
+            $this->comment('No database detected - skipping setting the build number.');
+            return;
+        }
+
+        try {
+            $build = UpdateManager::instance()->setBuildNumberManually();
+            $this->comment('*** October sets build: '.$build);
+        }
+        catch (Exception $ex) {
+            $this->comment('*** You were kicked from #october by Ex: ('.$ex->getMessage().')');
+        }
+
+        $this->comment('-');
+        sleep(1);
+        $this->comment('Ping? Pong!');
+        $this->comment('-');
+        sleep(1);
+        $this->comment('Ping? Pong!');
+        $this->comment('-');
+    }
 
     protected function utilCompileJs()
     {
@@ -110,7 +160,7 @@ class OctoberUtil extends Command
         $combiner = CombineAssets::instance();
         $bundles = $combiner->getBundles($type);
 
-        if (!$bundles){
+        if (!$bundles) {
             $this->comment('Nothing to compile!');
             return;
         }
@@ -148,7 +198,6 @@ class OctoberUtil extends Command
         $stub = base_path() . '/modules/system/assets/js/lang/lang.stub';
 
         foreach ($locales as $locale) {
-
             /*
              * Generate messages
              */
@@ -158,6 +207,14 @@ class OctoberUtil extends Command
             $messages = require $fallbackPath;
             if (File::isFile($srcPath) && $fallbackPath != $srcPath) {
                 $messages = array_replace_recursive($messages, require $srcPath);
+            }
+
+            /*
+             * Load possible replacements from /lang
+             */
+            $overridePath = base_path() . '/lang/'.$locale.'/system/client.php';
+            if (File::isFile($overridePath)) {
+                $messages = array_replace_recursive($messages, require $overridePath);
             }
 
             /*
@@ -256,7 +313,10 @@ class OctoberUtil extends Command
     {
         foreach (File::directories(plugins_path()) as $authorDir) {
             foreach (File::directories($authorDir) as $pluginDir) {
-                if (!File::isDirectory($pluginDir.'/.git')) continue;
+                if (!File::exists($pluginDir.'/.git')) {
+                    continue;
+                }
+
                 $exec = 'cd ' . $pluginDir . ' && ';
                 $exec .= 'git pull 2>&1';
                 echo 'Updating plugin: '. basename(dirname($pluginDir)) .'.'. basename($pluginDir) . PHP_EOL;
@@ -265,7 +325,10 @@ class OctoberUtil extends Command
         }
 
         foreach (File::directories(themes_path()) as $themeDir) {
-            if (!File::isDirectory($themeDir.'/.git')) continue;
+            if (!File::exists($themeDir.'/.git')) {
+                continue;
+            }
+
             $exec = 'cd ' . $themeDir . ' && ';
             $exec .= 'git pull 2>&1';
             echo 'Updating theme: '. basename($themeDir) . PHP_EOL;
@@ -273,4 +336,22 @@ class OctoberUtil extends Command
         }
     }
 
+    protected function utilSetProject()
+    {
+        $projectId = $this->option('projectId');
+
+        if (empty($projectId)) {
+            $this->error("No projectId defined, use --projectId=<id> to set a projectId");
+            return;
+        }
+
+        $manager = UpdateManager::instance();
+        $result = $manager->requestProjectDetails($projectId);
+
+        Parameter::set([
+            'system::project.id'    => $projectId,
+            'system::project.name'  => $result['name'],
+            'system::project.owner' => $result['owner'],
+        ]);
+    }
 }

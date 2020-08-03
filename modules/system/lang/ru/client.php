@@ -31,9 +31,8 @@ return [
         'link' => 'Ссылка',
         'horizontalrule' => 'Вставить горизонтальную черту',
         'fullscreen' => 'Полный экран',
-        'preview' => 'Предпросмотр',
+        'preview' => 'Предпросмотр'
     ],
-
     'mediamanager' => [
         'insert_link' => "Вставить медиа-ссылку",
         'insert_image' => "Вставить медиа-изображение",
@@ -45,13 +44,59 @@ return [
         'invalid_video_empty_insert' => "Пожалуйста, выберите видео для вставки.",
         'invalid_audio_empty_insert' => "Пожалуйста, выберите аудио для вставки.",
     ],
-
     'alert' => [
         'confirm_button_text' => 'Ок',
         'cancel_button_text' => 'Отмена',
+        'widget_remove_confirm' => 'Удалить этот виджет?'
     ],
-
+    'datepicker' => [
+        'previousMonth' => 'Предыдущий месяц',
+        'nextMonth' => 'Следующий месяц',
+        'months' => ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+        'weekdays' => ['Воскресение', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+        'weekdaysShort' => ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+    ],
+    'colorpicker' => [
+        'choose' => 'ОК',
+    ],
+    'filter' => [
+        'group' => [
+            'all' => 'все'
+        ],
+        'scopes' => [
+            'apply_button_text' => 'Применить',
+            'clear_button_text'  => 'Очистить'
+        ],
+        'dates' => [
+            'all' => 'все',
+            'filter_button_text' => 'Фильтр',
+            'reset_button_text' => 'Сбросить',
+            'date_placeholder' => 'Дата',
+            'after_placeholder' => 'После',
+            'before_placeholder' => 'До'
+        ],
+        'numbers' => [
+            'all' => 'все',
+            'filter_button_text' => 'Фильтр',
+            'reset_button_text'  => 'Сброс',
+            'min_placeholder' => 'Min',
+            'max_placeholder' => 'Max'
+        ]
+    ],
+    'eventlog' => [
+        'show_stacktrace' => 'Показать трассировку стека',
+        'hide_stacktrace' => 'Скрыть трассировку стека',
+        'tabs' => [
+            'formatted' => 'Форматированный',
+            'raw' => 'Исходный'
+        ],
+        'editor' => [
+            'title' => 'Редактор исходного кода',
+            'description' => 'Ваша операционная система должна быть настроена на прослушивание к одной из этих схем URL.',
+            'openWith' => 'Открыть с помощью',
+            'remember_choice' => 'Запомнить выбранный вариант для этой сессии',
+            'open' => 'Открыть',
+            'cancel' => 'Отмена'
+        ],
+    ],
 ];
-
-
-

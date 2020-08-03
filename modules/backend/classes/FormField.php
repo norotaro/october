@@ -1,5 +1,6 @@
 <?php namespace Backend\Classes;
 
+use Str;
 use Html;
 use October\Rain\Database\Model;
 use October\Rain\Html\Helper as HtmlHelper;
@@ -19,13 +20,19 @@ class FormField
     const NO_SAVE_DATA = -1;
 
     /**
+     * @var string A special character in yaml config files to indicate a field higher in hierarchy
+     */
+    const HIERARCHY_UP = '^';
+
+    /**
      * @var string Form field name.
      */
     public $fieldName;
 
     /**
-     * @var string If the field element names should be contained in an array.
-     * Eg: <input name="nameArray[fieldName]" />
+     * @var string If the field element names should be contained in an array. Eg:
+     *
+     *     <input name="nameArray[fieldName]" />
      */
     public $arrayName;
 
@@ -87,12 +94,12 @@ class FormField
     /**
      * @var string Specifies contextual visibility of this form field.
      */
-    public $context = null;
+    public $context;
 
     /**
      * @var bool Specifies if this field is mandatory.
      */
-    public $required = false;
+    public $required;
 
     /**
      * @var bool Specify if the field is read-only or not.
@@ -171,8 +178,8 @@ class FormField
 
     /**
      * Constructor.
-     * @param string $fieldName
-     * @param string $label
+     * @param string $fieldName The name of the field
+     * @param string $label The label of the field
      */
     public function __construct($fieldName, $label)
     {
@@ -227,9 +234,8 @@ class FormField
 
             return [];
         }
-        else {
-            $this->options = $value;
-        }
+
+        $this->options = $value;
 
         return $this;
     }
@@ -242,6 +248,7 @@ class FormField
      * - radio - creates a set of radio buttons.
      * - checkbox - creates a single checkbox.
      * - checkboxlist - creates a checkbox list.
+     * - switch - creates a switch field.
      * @param string $type Specifies a render mode as described above
      * @param array $config A list of render mode specific config.
      */
@@ -249,6 +256,7 @@ class FormField
     {
         $this->type = strtolower($type) ?: $this->type;
         $this->config = $this->evalConfig($config);
+
         return $this;
     }
 
@@ -259,7 +267,7 @@ class FormField
      */
     protected function evalConfig($config)
     {
-        if (is_null($config)) {
+        if ($config === null) {
             $config = [];
         }
 
@@ -352,6 +360,20 @@ class FormField
     }
 
     /**
+     * Determine if the provided value matches this field's value.
+     * @param string $value
+     * @return bool
+     */
+    public function isSelected($value = true)
+    {
+        if ($this->value === null) {
+            return false;
+        }
+
+        return (string) $value === (string) $this->value;
+    }
+
+    /**
      * Sets the attributes for this field in a given position.
      * - field: Attributes are added to the form field element (input, select, textarea, etc)
      * - container: Attributes are added to the form field container (div.form-group)
@@ -402,6 +424,16 @@ class FormField
     {
         $result = array_get($this->attributes, $position, []);
         $result = $this->filterAttributes($result, $position);
+
+        // Field is required, so add the "required" attribute
+        if ($position === 'field' && $this->required && (!isset($result['required']) || $result['required'])) {
+            $result['required'] = '';
+        }
+        // The "required" attribute is set and falsy, so unset it
+        elseif ($position === 'field' && isset($result['required']) && !$result['required']) {
+            unset($result['required']);
+        }
+
         return $htmlBuild ? Html::attributes($result) : $result;
     }
 
@@ -425,6 +457,10 @@ class FormField
 
         if ($position == 'field' && $this->readOnly) {
             $attributes = $attributes + ['readonly' => 'readonly'];
+
+            if ($this->type == 'checkbox' || $this->type == 'switch') {
+                $attributes = $attributes + ['onclick' => 'return false;'];
+            }
         }
 
         return $attributes;
@@ -445,6 +481,8 @@ class FormField
         $triggerAction = array_get($this->trigger, 'action');
         $triggerField = array_get($this->trigger, 'field');
         $triggerCondition = array_get($this->trigger, 'condition');
+        $triggerForm = $this->arrayName;
+        $triggerMulti = '';
 
         // Apply these to container
         if (in_array($triggerAction, ['hide', 'show']) && $position != 'container') {
@@ -456,22 +494,36 @@ class FormField
             return $attributes;
         }
 
+        // Reduce the field reference for the trigger condition field
+        $triggerFieldParentLevel = Str::getPrecedingSymbols($triggerField, self::HIERARCHY_UP);
+        if ($triggerFieldParentLevel > 0) {
+            // Remove the preceding symbols from the trigger field name
+            $triggerField = substr($triggerField, $triggerFieldParentLevel);
+            $triggerForm = HtmlHelper::reduceNameHierarchy($triggerForm, $triggerFieldParentLevel);
+        }
+
+        // Preserve multi field types
+        if (Str::endsWith($triggerField, '[]')) {
+            $triggerField = substr($triggerField, 0, -2);
+            $triggerMulti = '[]';
+        }
+
+        // Final compilation
         if ($this->arrayName) {
-            $fullTriggerField = $this->arrayName.'['.implode('][', HtmlHelper::nameToArray($triggerField)).']';
+            $fullTriggerField = $triggerForm.'['.implode('][', HtmlHelper::nameToArray($triggerField)).']'.$triggerMulti;
         }
         else {
-            $fullTriggerField = $triggerField;
+            $fullTriggerField = $triggerField.$triggerMulti;
         }
 
         $newAttributes = [
             'data-trigger' => '[name="'.$fullTriggerField.'"]',
             'data-trigger-action' => $triggerAction,
             'data-trigger-condition' => $triggerCondition,
-            'data-trigger-closest-parent' => 'form'
+            'data-trigger-closest-parent' => 'form, div[data-control="formwidget"]'
         ];
 
-        $attributes = $attributes + $newAttributes;
-        return $attributes;
+        return $attributes + $newAttributes;
     }
 
     /**
@@ -510,8 +562,7 @@ class FormField
             $newAttributes['data-input-preset-prefix-input'] = $prefixInput;
         }
 
-        $attributes = $attributes + $newAttributes;
-        return $attributes;
+        return $attributes + $newAttributes;
     }
 
     /**
@@ -528,9 +579,8 @@ class FormField
         if ($arrayName) {
             return $arrayName.'['.implode('][', HtmlHelper::nameToArray($this->fieldName)).']';
         }
-        else {
-            return $this->fieldName;
-        }
+
+        return $this->fieldName;
     }
 
     /**
@@ -602,8 +652,10 @@ class FormField
     }
 
     /**
-     * Returns the final model and attribute name of a nested attribute.
-     * Eg: list($model, $attribute) = $this->resolveAttribute('person[phone]');
+     * Returns the final model and attribute name of a nested attribute. Eg:
+     *
+     *     list($model, $attribute) = $this->resolveAttribute('person[phone]');
+     *
      * @param  string $attribute.
      * @return array
      */
@@ -645,7 +697,6 @@ class FormField
          * relation value, all others will look up the relation object as normal.
          */
         foreach ($keyParts as $key) {
-
             if ($result instanceof Model && $result->hasRelation($key)) {
                 if ($key == $lastField) {
                     $result = $result->getRelationValue($key) ?: $default;
@@ -666,7 +717,6 @@ class FormField
                 }
                 $result = $result->{$key};
             }
-
         }
 
         return $result;

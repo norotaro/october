@@ -19,9 +19,6 @@ return [
             'help' => "Non hai le autorizzazioni necessarie per accedere a questa pagina.",
             'cms_link' => 'Ritorna al pannello di controllo'
         ],
-        'invalid_token' => [
-            'label' => 'Token di protezione non valido'
-        ]
     ],
     'partial' => [
         'not_found_name' => "La vista parziale ':name' non è stata trovata."
@@ -86,7 +83,7 @@ return [
             'request_log' => 'Log richieste',
             'app_birthday' => 'Online dal',
         ],
-		'welcome' => [
+        'welcome' => [
             'widget_title_default' => 'Benvenuto',
             'welcome_back_name' => 'Bentornato su :app, :name.',
             'welcome_to_name' => 'Benvenuto su :app, :name.',
@@ -151,7 +148,7 @@ return [
         'missing_column' => 'Non ci sono colonne definite per :columns.',
         'missing_columns' => 'L\'elenco utilizzato nella classe :class non ha un elenco di colonne definito.',
         'missing_definition' => "L'elenco non contiene una colonna per il campo ':field'.",
-        'missing_parent_definition' => "L\'elenco non contiene una definitzione per ':definition'.",
+        'missing_parent_definition' => "L\'elenco non contiene una definizione per ':definition'.",
         'behavior_not_ready' => 'Il comportamento "elenco" non è stato inizializzato, controlla di aver chiamato il metodo makeLists() nel controller.',
         'invalid_column_datetime' => "Il valore della colonna ':column' non è un oggetto di tipo DateTime, hai dimenticato un riferimento a \$dates nel modello?",
         'pagination' => 'Record visualizzati: :from-:to di :total',
@@ -230,15 +227,15 @@ return [
         'preview_no_files_message' => 'Non ci sono file caricati.',
         'preview_no_record_message' => 'Nessun record selezionato.',
         'select' => 'Seleziona',
-        'select_all' => 'tutti',
-        'select_none' => 'nessuno',
+        'select_all' => 'seleziona tutto',
+        'select_none' => 'non selezionare niente',
         'select_placeholder' => 'seleziona',
         'insert_row' => 'Inserisci riga',
         'insert_row_below' => 'Inserisci riga sotto',
         'delete_row' => 'Elimina riga',
         'concurrency_file_changed_title' => 'Il file è stato cambiato',
         'concurrency_file_changed_description' => "Il file che stavi modificando è stato cambiato da un altro utente. Puoi ricaricare il file e perdere le tue modifiche oppure sovrascrivere il file sul disco.",
-		'return_to_list' => 'Ritorna all\'elenco'
+        'return_to_list' => 'Ritorna all\'elenco'
     ],
     'recordfinder' => [
         'find_record' => 'Trova record'
@@ -472,5 +469,72 @@ return [
             'windows_1251' => 'Windows-1251 (CP1251)',
             'windows_1252' => 'Windows-1252 (CP1252)'
         ]
+    ],
+    'permissions' => [
+        'manage_media' => 'Gestisci elementi multimediali'
+    ],
+    'mediafinder' => [
+        'label' => 'Media Finder',
+        'default_prompt' => 'Fai clic sul pulsante %s per trovare un elemento multimediale'
+    ],
+    'media' => [
+        'menu_label' => 'Elementi multimediali',
+        'upload' => 'Carica',
+        'move' => 'Sposta',
+        'delete' => 'Elimina',
+        'add_folder' => 'Aggiungi cartella',
+        'search' => 'Cerca',
+        'display' => 'Visualizza',
+        'filter_everything' => 'Tutto',
+        'filter_images' => 'Immagini',
+        'filter_video' => 'Video',
+        'filter_audio' => 'Audio',
+        'filter_documents' => 'Documenti',
+        'library' => 'Libreria',
+        'size' => 'Dimensione',
+        'title' => 'Titolo',
+        'last_modified' => 'Ultima modifica',
+        'public_url' => 'URL pubblico',
+        'click_here' => 'Fai clic qui',
+        'thumbnail_error' => 'Errore durante la generazione dell\'anteprima.',
+        'return_to_parent' => 'Ritorna alla cartella superiore',
+        'return_to_parent_label' => 'Torna su ..',
+        'nothing_selected' => 'Nessun elemento selezionato.',
+        'multiple_selected' => 'Elementi multipli selezionati.',
+        'uploading_file_num' => 'Caricamento in corso di :number file(s)...',
+        'uploading_complete' => 'Caricamento completato',
+        'uploading_error' => 'Caricamento fallito',
+        'type_blocked' => 'Il tipo di file utilizzato è bloccato per questioni di sicurezza.',
+        'order_by' => 'Ordina per',
+        'folder' => 'Cartella',
+        'no_files_found' => 'Nessun file corrisponde alla tua richiesta.',
+        'delete_empty' => 'Seleziona elementi da eliminare.',
+        'delete_confirm' => 'Vuoi davvero eliminare gli elementi selezionati?',
+        'error_renaming_file' => 'Errore durante la rinominazione dell\'elemento',
+        'new_folder_title' => 'Nuova cartella',
+        'folder_name' => 'Nome della cartella',
+        'error_creating_folder' => 'Errore durante la creazione della cartella',
+        'folder_or_file_exist' => 'Una cartella o un file con il nome specificato è già esistente.',
+        'move_empty' => 'Selezione elementi da spostare.',
+        'move_popup_title' => 'Sposta file o cartelle',
+        'move_destination' => 'Cartella di destinazione',
+        'please_select_move_dest' => 'Seleziona una cartella di destinazione.',
+        'move_dest_src_match' => 'Seleziona un\'altra cartella di destinazione.',
+        'empty_library' => 'La libreria è vuota. Carica dei files o crea delle cartelle per iniziare.',
+        'insert' => 'Inserisci',
+        'crop_and_insert' => 'Ritaglia e inserisci',
+        'select_single_image' => 'Seleziona una singola immagine.',
+        'selection_not_image' => 'L\'elemento selezionato non è un\'immagine.',
+        'restore' => 'Annulla tutte le modifiche',
+        'resize' => 'Ridimensiona...',
+        'selection_mode_normal' => 'Normale',
+        'selection_mode_fixed_ratio' => 'Rapporto fisso',
+        'selection_mode_fixed_size' => 'Dimensione fissa',
+        'height' => 'Altezza',
+        'width' => 'Larghezza',
+        'selection_mode' => 'Metodo di selezione',
+        'resize_image' => 'Ridimensiona immagine',
+        'image_size' => 'Dimensione immagine:',
+        'selected_size' => 'Selezionati:'
     ]
 ];

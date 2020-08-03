@@ -3,6 +3,7 @@
 use Mail;
 use Event;
 use Backend;
+use BackendAuth;
 use October\Rain\Auth\Models\User as UserBase;
 
 /**
@@ -13,6 +14,8 @@ use October\Rain\Auth\Models\User as UserBase;
  */
 class User extends UserBase
 {
+    use \October\Rain\Database\Traits\SoftDelete;
+
     /**
      * @var string The database table used by the model.
      */
@@ -29,14 +32,29 @@ class User extends UserBase
     ];
 
     /**
+     * @var array Attributes that should be cast to dates
+     */
+    protected $dates = [
+        'activated_at',
+        'last_login',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    /**
      * Relations
      */
     public $belongsToMany = [
-        'groups' => ['Backend\Models\UserGroup', 'table' => 'backend_users_groups']
+        'groups' => [UserGroup::class, 'table' => 'backend_users_groups']
+    ];
+
+    public $belongsTo = [
+        'role' => UserRole::class
     ];
 
     public $attachOne = [
-        'avatar' => ['System\Models\File']
+        'avatar' => \System\Models\File::class
     ];
 
     /**
@@ -92,12 +110,11 @@ class User extends UserBase
         if ($this->avatar) {
             return $this->avatar->getThumb($size, $size, $options);
         }
-        else {
-            return '//www.gravatar.com/avatar/' .
-                md5(strtolower(trim($this->email))) .
-                '?s='. $size .
-                '&d='. urlencode($default);
-        }
+
+        return '//www.gravatar.com/avatar/' .
+            md5(strtolower(trim($this->email))) .
+            '?s='. $size .
+            '&d='. urlencode($default);
     }
 
     /**
@@ -120,6 +137,18 @@ class User extends UserBase
     public function afterLogin()
     {
         parent::afterLogin();
+
+        /**
+         * @event backend.user.login
+         * Provides an opportunity to interact with the Backend User model after the user has logged in
+         *
+         * Example usage:
+         *
+         *     Event::listen('backend.user.login', function ((\Backend\Models\User) $user) {
+         *         Flash::success(sprintf('Welcome %s!', $user->getFullNameAttribute()));
+         *     });
+         *
+         */
         Event::fire('backend.user.login', [$this]);
     }
 
@@ -144,9 +173,40 @@ class User extends UserBase
     public function getGroupsOptions()
     {
         $result = [];
+
         foreach (UserGroup::all() as $group) {
             $result[$group->id] = [$group->name, $group->description];
         }
+
         return $result;
+    }
+
+    public function getRoleOptions()
+    {
+        $result = [];
+
+        foreach (UserRole::all() as $role) {
+            $result[$role->id] = [$role->name, $role->description];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check if the user is suspended.
+     * @return bool
+     */
+    public function isSuspended()
+    {
+        return BackendAuth::findThrottleByUserId($this->id)->checkSuspended();
+    }
+
+    /**
+     * Remove the suspension on this user.
+     * @return void
+     */
+    public function unsuspend()
+    {
+        BackendAuth::findThrottleByUserId($this->id)->unsuspend();
     }
 }

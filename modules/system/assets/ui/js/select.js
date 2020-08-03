@@ -9,24 +9,29 @@
 (function($){
 
     /*
-     * Custom drop downs (Desktop only)
+     * Custom drop downs
      */
     $(document).render(function(){
         var formatSelectOption = function(state) {
-            if (!state.id)
-                return state.text; // optgroup
+            var text = $('<span>').text(state.text).html()
+
+            if (!state.id) {
+                return text // optgroup
+            }
 
             var $option = $(state.element),
-                iconClass = $option.data('icon'),
-                imageSrc = $option.data('image')
+                iconClass = state.icon ? state.icon : $option.data('icon'),
+                imageSrc = state.image ? state.image : $option.data('image')
 
-            if (iconClass)
-                return '<i class="select-icon '+iconClass+'"></i> ' + state.text
+            if (iconClass) {
+                return '<i class="select-icon '+iconClass+'"></i> ' + text
+            }
 
-            if (imageSrc)
-                return '<img class="select-image" src="'+imageSrc+'" alt="" /> ' + state.text
+            if (imageSrc) {
+                return '<img class="select-image" src="'+imageSrc+'" alt="" /> ' + text
+            }
 
-            return state.text
+            return text
         }
 
         var selectOptions = {
@@ -70,6 +75,48 @@
                 extraOptions.dropdownCssClass += ' select-hide-selected'
             }
 
+            /*
+             * October AJAX
+             */
+            var source = $element.data('handler');
+            if (source) {
+                extraOptions.ajax = {
+                    transport: function(params, success, failure) {
+                        var $request = $element.request(source, {
+                            data: params.data
+                        })
+
+                        $request.done(success)
+                        $request.fail(failure)
+
+                        return $request
+                    },
+                    processResults: function (data, params) {
+                        var results = data.result || data.results,
+                            options = []
+
+                        delete(data.result)
+                        if (results[0] && typeof(results[0]) === 'object') { // Pass through Select2 format
+                            options = results
+                        }
+                        else { // Key-value map
+                            for (var i in results) {
+                                if (results.hasOwnProperty(i)) {
+                                    options.push({
+                                        id: i,
+                                        text: results[i],
+                                    })
+                                }
+                            }
+                        }
+
+                        data.results = options
+                        return data
+                    },
+                    dataType: 'json'
+                }
+            }
+
             var separators = $element.data('token-separators')
             if (separators) {
                 extraOptions.tags = true
@@ -81,10 +128,13 @@
                 if ($element.hasClass('select-no-dropdown')) {
                     extraOptions.selectOnClose = true
                     extraOptions.closeOnSelect = false
+                    extraOptions.minimumInputLength = 1
 
                     $element.on('select2:closing', function() {
-                        $('.select2-dropdown.select-no-dropdown:first .select2-results__option--highlighted').removeClass('select2-results__option--highlighted')
-                        $('.select2-dropdown.select-no-dropdown:first .select2-results__option:first').addClass('select2-results__option--highlighted')
+                        if ($('.select2-dropdown.select-no-dropdown:first .select2-results__option--highlighted').length > 0) {
+                            $('.select2-dropdown.select-no-dropdown:first .select2-results__option--highlighted').removeClass('select2-results__option--highlighted')
+                            $('.select2-dropdown.select-no-dropdown:first .select2-results__option:first').addClass('select2-results__option--highlighted')
+                        }
                     })
                 }
             }
@@ -92,6 +142,7 @@
             var placeholder = $element.data('placeholder')
             if (placeholder) {
                 extraOptions.placeholder = placeholder
+                extraOptions.allowClear = true
             }
 
             $element.select2($.extend({}, selectOptions, extraOptions))

@@ -11,6 +11,11 @@ return [
     'file' => [
         'create_fail' => 'Nevar izveidot failu: :name'
     ],
+    'page' => [
+        'invalid_token' => [
+            'label' => 'Nederīga drošības atslēga',
+        ],
+    ],
     'combiner' => [
         'not_found' => "Kombināciju fails ':name' netika atrasts."
     ],
@@ -286,5 +291,9 @@ return [
         'manage_other_administrators' => 'Pārvaldīt citus administrātorus',
         'view_the_dashboard' => 'Skatīt mērinstrumentu paneli',
         'manage_branding' => 'Pielāgot back-end'
-    ]
+    ],
+    'media' => [
+        'invalid_path' => "Norādīts nederīgs ceļš līdz failam: ':path'.",
+        'folder_size_items' => 'objekti(s)',
+    ],
 ];

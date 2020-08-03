@@ -2,7 +2,7 @@
  * OctoberCMS: front-end JavaScript extras
  * http://octobercms.com
  * ========================================================================
- * Copyright 2016 Alexey Bobkov, Samuel Georges
+ * Copyright 2016-2020 Alexey Bobkov, Samuel Georges
  * ======================================================================== */
 
 +function ($) { "use strict";
@@ -19,18 +19,13 @@
     // FLASH HANDLING
     // ============================
 
-    $(document).on('ajaxError', '[data-request][data-request-flash]', function(event, context, message) {
-        if (!event.isDefaultPrevented() && message) {
+    $(document).on('ajaxSetup', '[data-request][data-request-flash]', function(event, context) {
+        context.options.handleErrorMessage = function(message) {
             $.oc.flashMsg({ text: message, class: 'error' })
-            event.preventDefault()
         }
-    })
 
-    $(document).on('ajaxBeforeUpdate', '[data-request][data-request-flash]', function(event, context, data) {
-        if (data['X_OCTOBER_FLASH_MESSAGES']) {
-            $.each(data['X_OCTOBER_FLASH_MESSAGES'], function(type, message) {
-                $.oc.flashMsg({ text: message, class: type })
-            })
+        context.options.handleFlashMessage = function(message, type) {
+            $.oc.flashMsg({ text: message, class: type })
         }
     })
 
@@ -57,7 +52,7 @@
         })
 
         if (!!$container.length) {
-            $container = $('[data-validate-error]')
+            $container = $('[data-validate-error]', $this)
         }
 
         if (!!$container.length) {

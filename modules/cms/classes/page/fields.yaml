@@ -26,6 +26,7 @@ fields:
     components: Cms\FormWidgets\Components
 
 tabs:
+    cssClass: master-area
     fields:
         fileName:
             tab: cms::lang.editor.settings
@@ -72,6 +73,12 @@ secondaryTabs:
             stretch: true
             type: codeeditor
             language: twig
+
+        safemode_notice:
+            tab: cms::lang.editor.code
+            type: partial
+            hidden: true
+            cssClass: p-b-0
 
         code:
             tab: cms::lang.editor.code
